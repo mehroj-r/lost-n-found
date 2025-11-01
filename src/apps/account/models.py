@@ -18,7 +18,7 @@ class User(AbstractBaseUser, TimestampedModel, SoftDeleteModel):
     phone = models.CharField(max_length=15, unique=True, verbose_name=_("Phone Number"), null=True, blank=True)
     email = models.EmailField(unique=True, verbose_name=_("Email"))
 
-    USERNAME_FIELD = "username"
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "email"]
 
     # For Django Admin
