@@ -19,7 +19,7 @@ class User(AbstractBaseUser, TimestampedModel, SoftDeleteModel):
     email = models.EmailField(unique=True, verbose_name=_("Email"))
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "email"]
+    REQUIRED_FIELDS = ["first_name", "phone", "username"]
 
     # For Django Admin
     is_staff = models.BooleanField(default=False, verbose_name=_("Is staff"))
