@@ -16,6 +16,9 @@ class UserManager(BaseUserManager):
                 f"The username field must be set: {self.model.USERNAME_FIELD}"
             )
 
+        # Remove USERNAME_FIELD from extra_fields to avoid duplicate keyword argument
+        extra_fields.pop(self.model.USERNAME_FIELD, None)
+
         user = self.model(**{self.model.USERNAME_FIELD: username}, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
