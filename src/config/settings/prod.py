@@ -1,6 +1,16 @@
 from datetime import timedelta
 from .base import *
 
+INSTALLED_APPS += [
+    'corsheaders'
+]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+] + MIDDLEWARE
+
+CORS_URLS_REGEX = r'^/api/.*$'
+
 DEBUG = False
 
 SIMPLE_JWT = {
