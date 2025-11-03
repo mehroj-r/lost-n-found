@@ -39,6 +39,8 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "apps.account",
     "apps.core",
+    "apps.file",
+    "apps.post",
 ]
 
 INSTALLED_APPS = UNFOLD_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

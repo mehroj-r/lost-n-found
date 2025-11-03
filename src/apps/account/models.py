@@ -2,7 +2,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.core.models import TimestampedModel, SoftDeleteModel
+from apps.core.models import TimestampedModel, SoftDeleteModel, BaseModel
 from django.contrib.auth.hashers import make_password
 
 from apps.account import managers
@@ -13,6 +13,7 @@ class User(AbstractBaseUser, TimestampedModel, SoftDeleteModel):
     first_name = models.CharField(max_length=30, verbose_name=_("First Name"))
     last_name = models.CharField(max_length=30, verbose_name=_("Last Name"), blank=True, null=True)
     patronymic = models.CharField(max_length=100, verbose_name=_("Patronymic"), blank=True, null=True)
+    gender = models.CharField(max_length=10, verbose_name=_("Gender"), blank=True, null=True)
 
     username = models.CharField(max_length=150, unique=True, verbose_name=_("Username"))
     phone = models.CharField(max_length=15, unique=True, verbose_name=_("Phone Number"), null=True, blank=True)
@@ -50,3 +51,14 @@ class User(AbstractBaseUser, TimestampedModel, SoftDeleteModel):
             self.password = make_password(self.password)  # Hash the password
 
         return super().save(*args, **kwargs)
+
+
+class UserProfile(BaseModel):
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    bio = models.TextField(max_length=500, blank=True, null=True)
+    avatar = models.ForeignKey(to="file.File", on_delete=models.SET_NULL,
+                               null=True, blank=True, related_name="user_avatars")
+
+    def __str__(self):
+        return f"Profile of {self.user.get_username()}"
