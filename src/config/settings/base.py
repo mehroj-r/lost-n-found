@@ -1,8 +1,6 @@
-import os
 from pathlib import Path
 from decouple import config
 import dj_database_url
-from django.utils import timezone
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DEBUG = config("DEBUG", default=False, cast=bool)
@@ -142,7 +140,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-    )
+    ),
+    "EXCEPTION_HANDLER": "apps.core.api.exceptions.custom_exception_handler", # noqa
 }
 
 AUTH_USER_MODEL = "account.User"  # noqa

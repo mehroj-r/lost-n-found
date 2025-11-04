@@ -16,6 +16,7 @@ dependencies = [
     "django-unfold>=0.63.0",
     "djangorestframework>=3.16.0",
     "djangorestframework-simplejwt[crypto]>=5.5.1",
+    "drf-spectacular>=0.29.0",
     "markdown>=3.8.2",
     "psycopg2-binary>=2.9.10",
     "pycparser>=2.22",

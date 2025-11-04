@@ -13,14 +13,14 @@ class User(AbstractBaseUser, TimestampedModel, SoftDeleteModel):
     first_name = models.CharField(max_length=30, verbose_name=_("First Name"))
     last_name = models.CharField(max_length=30, verbose_name=_("Last Name"), blank=True, null=True)
     patronymic = models.CharField(max_length=100, verbose_name=_("Patronymic"), blank=True, null=True)
-    gender = models.CharField(max_length=10, verbose_name=_("Gender"), blank=True, null=True)
+    gender = models.CharField(max_length=10, verbose_name=_("Gender"))
 
-    username = models.CharField(max_length=150, unique=True, verbose_name=_("Username"))
-    phone = models.CharField(max_length=15, unique=True, verbose_name=_("Phone Number"), null=True, blank=True)
+    username = models.CharField(max_length=150, unique=True, verbose_name=_("Username"), null=True)
+    phone = models.CharField(max_length=15, unique=True, verbose_name=_("Phone Number"))
     email = models.EmailField(unique=True, verbose_name=_("Email"))
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "phone", "username"]
+    REQUIRED_FIELDS = ["first_name", "phone"]
 
     # For Django Admin
     is_staff = models.BooleanField(default=False, verbose_name=_("Is staff"))
@@ -34,7 +34,7 @@ class User(AbstractBaseUser, TimestampedModel, SoftDeleteModel):
         verbose_name_plural = _("Users")
 
     def __str__(self):
-        return f"{self.first_name} (@{self.get_username()})"
+        return f"{self.first_name} ({self.get_username()})"
 
     def get_navigation_title(self):
         return f"{self.first_name} {self.last_name}"
