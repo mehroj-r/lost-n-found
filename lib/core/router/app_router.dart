@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/cubit/auth_cubit.dart';
 import '../../features/auth/view/login_page.dart';
+import '../../features/home/view/home_page.dart';
 import '../../features/profile/view/profile_page.dart';
 
 GoRouter buildRouter(AuthCubit authCubit) {
@@ -20,6 +21,7 @@ GoRouter buildRouter(AuthCubit authCubit) {
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
       GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
+      GoRoute(path: '/home', builder: (_, __) => const HomePage()),
     ],
   );
 }
