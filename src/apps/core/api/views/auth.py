@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.serializers import TokenVerifySerializer
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -8,14 +9,17 @@ from rest_framework_simplejwt.views import (
 from apps.core.api.views.base import BaseAPIView
 
 
+@extend_schema(tags=['auth'])
 class LoginAPIView(TokenObtainPairView, BaseAPIView):
     pass
 
 
+@extend_schema(tags=['auth'])
 class RefreshAPIView(TokenRefreshView, BaseAPIView):
     pass
 
 
+@extend_schema(tags=['auth'])
 class TokenVerifyAPIView(TokenVerifyView, BaseAPIView):
 
     def post(self, request, *args, **kwargs):

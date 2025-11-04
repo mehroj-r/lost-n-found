@@ -22,7 +22,7 @@ if DEBUG:
     }
 
     SPECTACULAR_SETTINGS = {
-        'TITLE': 'Deepwell service',
+        'TITLE': 'Findly Documentation',
         'DESCRIPTION': '',
         'VERSION': '1.0.0',
         'SERVE_INCLUDE_SCHEMA': False,

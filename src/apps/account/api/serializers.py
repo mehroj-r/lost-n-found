@@ -14,3 +14,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "last_name": {"required": False},
             "patronymic": {"required": False},
         }
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "phone", "username", "email", "first_name", "last_name", "patronymic", 'gender')
