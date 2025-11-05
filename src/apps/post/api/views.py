@@ -1,10 +1,12 @@
 from django.db import transaction
+from django.db.models import Q
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.core.api.views.base import BaseAPIView
+from apps.core.utils.constants import PostType
 from apps.post.api.serializers import PostSerializer
 from apps.post.models import Post
 
@@ -15,7 +17,19 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
     queryset = Post.objects.all()
 
     def list(self, request, *args, **kwargs):
+        query = self.request.query_params.get('query', None)
+        type = self.request.query_params.get('type', None)
+
         self.queryset = self.queryset.select_related('author')
+
+        # Search filtering
+        if query:
+            self.queryset = self.queryset.filter(Q(title__icontains=query) | Q(description__icontains=query))
+
+        # Type filtering
+        if type and type in PostType.values:
+            self.queryset = self.queryset.filter(type=type)
+
         return super().list(request, *args, **kwargs)
 
     @transaction.atomic

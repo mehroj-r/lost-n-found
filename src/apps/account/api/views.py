@@ -10,3 +10,12 @@ class RegisterApiView(core_views.CreateAPIView):
     serializer_class = account_ser.UserRegisterSerializer
     permission_classes = [permissions.AllowAny]
     queryset = User.objects.all()
+
+
+@extend_schema(tags=['user'])
+class ProfileApiView(core_views.RetrieveAPIView, core_views.UpdateAPIView):
+    serializer_class = account_ser.UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user

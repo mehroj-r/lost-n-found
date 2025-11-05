@@ -102,7 +102,10 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = BASE_DIR.parent / "cdn/staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR.parent / "cdn/media"
 
 # Logging
 LOGGING = {
@@ -143,6 +146,9 @@ REST_FRAMEWORK = {
     ),
     "EXCEPTION_HANDLER": "apps.core.api.exceptions.custom_exception_handler", # noqa
 }
+
+BASE_URL = config("BASE_URL", default="http://localhost:8000")
+USE_S3 = config("USE_S3", default=False, cast=bool)
 
 AUTH_USER_MODEL = "account.User"  # noqa
 

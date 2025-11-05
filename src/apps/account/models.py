@@ -36,6 +36,14 @@ class User(AbstractBaseUser, TimestampedModel, SoftDeleteModel):
     def __str__(self):
         return f"{self.first_name} ({self.get_username()})"
 
+    def get_full_name(self):
+        full_name = f"{self.first_name}"
+        if self.last_name:
+            full_name += f" {self.last_name}"
+        if self.patronymic:
+            full_name += f" {self.patronymic}"
+        return full_name.strip()
+
     def get_navigation_title(self):
         return f"{self.first_name} {self.last_name}"
 
