@@ -15,7 +15,7 @@ GoRouter buildRouter(AuthCubit authCubit) {
       final loggedIn = authCubit.state.user != null;
       final loggingIn = state.matchedLocation == '/login';
       if (!loggedIn && !loggingIn) return '/login';
-      if (loggedIn && loggingIn) return '/profile';
+      if (loggedIn && loggingIn) return '/home';
       return null;
     },
     routes: [

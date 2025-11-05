@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Sign in')),
       body: BlocConsumer<AuthCubit, AuthState>(
-        listener: (c, s) { if (s.user != null) context.go('/profile'); },
+        listener: (c, s) { if (s.user != null) context.go('/home'); },
         builder: (c, s) {
           return Padding(
             padding: const EdgeInsets.all(16),

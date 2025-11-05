@@ -82,7 +82,7 @@ class HomePage extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppBar (
         title: const Text('Lost & Found'),
       ),
       body: ListView.builder(
