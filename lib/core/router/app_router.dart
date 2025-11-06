@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lost_n_found/features/auth/view/register_page.dart';
 import '../../features/auth/cubit/auth_cubit.dart';
 import '../../features/auth/view/login_page.dart';
 import '../../features/home/view/home_page.dart';
@@ -21,6 +22,7 @@ GoRouter buildRouter(AuthCubit authCubit) {
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
       GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
+      GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
       GoRoute(path: '/home', builder: (_, __) => const HomePage()),
     ],
   );
