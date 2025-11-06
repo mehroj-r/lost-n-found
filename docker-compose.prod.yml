@@ -22,8 +22,8 @@ services:
     build: .
     entrypoint: /app/scripts/entrypoint.sh
     volumes:
-      - static_data:/app/staticfiles
-      - media_data:/app/media
+      - static_data:/app/cdn/staticfiles
+      - media_data:/app/cdn/media
     ports:
         - "127.0.0.1:${APP_PORT}:8000"
     healthcheck:

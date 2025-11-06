@@ -1,4 +1,4 @@
-# ---- Stage 1: Builder ----
+`# ---- Stage 1: Builder ----
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
 ENV UV_COMPILE_BYTECODE=1 \
@@ -38,3 +38,4 @@ RUN apt-get update \
     && chown -R nonroot:nonroot /app/cdn/staticfiles /app/cdn/media
 
 USER nonroot
+`
