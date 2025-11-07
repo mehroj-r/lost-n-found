@@ -38,4 +38,3 @@ RUN apt-get update \
     && chown -R nonroot:nonroot /app/cdn/staticfiles /app/cdn/media
 
 USER nonroot
-`
