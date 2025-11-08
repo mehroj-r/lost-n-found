@@ -14,18 +14,32 @@ class _RegisterPageState extends State<RegisterPage> {
   final _first = TextEditingController();
   final _last = TextEditingController();
   final _phone = TextEditingController();
+  final _username = TextEditingController();
   final _email = TextEditingController();
+  final _patronymic = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
 
+  String? _gender;
   bool _obscure = true;
+  bool _canSubmit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final c in [_first, _last, _phone, _email, _password, _confirm, _username, _patronymic]) {
+      c.addListener(_recomputeCanSubmit);
+    }
+  }
 
   @override
   void dispose() {
     _first.dispose();
     _last.dispose();
     _phone.dispose();
+    _username.dispose();
     _email.dispose();
+    _patronymic.dispose();
     _password.dispose();
     _confirm.dispose();
     super.dispose();
@@ -75,6 +89,17 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  void _recomputeCanSubmit() {
+    final emailOk = _validateEmail(_email.text) == null;
+    final phoneOk = _validatePhone(_phone.text) == null;
+    final passOk = _validatePassword(_password.text) == null;
+    final namesOk = _first.text.trim().isNotEmpty;
+    final confirmOk = _confirm.text.isNotEmpty && _confirm.text == _password.text;
+    final genderOk = _gender != null && _gender!.isNotEmpty;
+    final can = emailOk && phoneOk && passOk && namesOk && confirmOk && genderOk;
+    if (can != _canSubmit) setState(() => _canSubmit = can);
+  }
+
   void _onSubmit() {
     if (!_formKey.currentState!.validate()) return;
     if (_password.text != _confirm.text) {
@@ -87,10 +112,13 @@ class _RegisterPageState extends State<RegisterPage> {
     // call cubit register
     context.read<AuthCubit>().register(
       firstName: _first.text.trim(),
-      lastName: _last.text.trim(),
+      lastName: _last.text.trim().isEmpty ? null : _last.text.trim(),
       email: _email.text.trim(),
       password: _password.text,
       phoneNumber: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
+      username: _username.text.trim().isEmpty ? null : _username.text.trim(),
+      patronymic: _patronymic.text.trim().isEmpty ? null : _patronymic.text.trim(),
+      gender: _gender!,
     );
   }
 
@@ -164,8 +192,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
                                 TextFormField(
                                   controller: _last,
-                                  decoration: _inputDecoration('Last Name'),
-                                  validator: (v) => _notEmpty(v, 'Last name'),
+                                  decoration: _inputDecoration('Last Name (optional)'),
+                                  validator: (_) => null,
                                   textInputAction: TextInputAction.next,
                                 ),
                                 const SizedBox(height: 12),
@@ -184,6 +212,32 @@ class _RegisterPageState extends State<RegisterPage> {
                                   decoration: _inputDecoration('Email'),
                                   keyboardType: TextInputType.emailAddress,
                                   validator: _validateEmail,
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                const SizedBox(height: 12),
+
+                                DropdownButtonFormField<String>(
+                                  value: _gender,
+                                  items: const [
+                                    DropdownMenuItem(value: 'male', child: Text('Male')),
+                                    DropdownMenuItem(value: 'female', child: Text('Female')),
+                                  ],
+                                  onChanged: (v) { setState(() => _gender = v); _recomputeCanSubmit(); },
+                                  decoration: _inputDecoration('Gender'),
+                                  validator: (v) => (v == null || v.isEmpty) ? 'Please select gender' : null,
+                                ),
+                                const SizedBox(height: 12),
+
+                                TextFormField(
+                                  controller: _username,
+                                  decoration: _inputDecoration('Username (optional)'),
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                const SizedBox(height: 12),
+
+                                TextFormField(
+                                  controller: _patronymic,
+                                  decoration: _inputDecoration('Patronymic (optional)'),
                                   textInputAction: TextInputAction.next,
                                 ),
                                 const SizedBox(height: 12),
@@ -227,7 +281,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   width: double.infinity,
                                   height: 48,
                                   child: ElevatedButton(
-                                    onPressed: isLoading ? null : _onSubmit,
+                                    onPressed: isLoading || !_canSubmit ? null : _onSubmit,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF6FA43B), // green
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),

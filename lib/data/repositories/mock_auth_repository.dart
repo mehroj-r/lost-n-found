@@ -40,10 +40,13 @@ class MockAuthRepository implements IAuthRepository {
   @override
   Future<Map<String, dynamic>> register({
     required String firstName,
-    required String lastName,
+    String? lastName,
     required String email,
     required String password,
     String? phoneNumber,
+    String? username,
+    String? patronymic,
+    required String gender,
   }) async {
     await Future.delayed(const Duration(milliseconds: 800));
 
@@ -64,9 +67,11 @@ class MockAuthRepository implements IAuthRepository {
         'email': email,
         'role': 'student',
         'first_name': firstName,
-        'last_name': lastName,
+        'last_name': lastName ?? '',
+        'username': username ?? '',
+        'patronymic': patronymic ?? '',
         'phone_number': phoneNumber ?? '',
-        'gender': '',
+        'gender': gender,
         'avatarUrl': null,
       },
     };

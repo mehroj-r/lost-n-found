@@ -67,8 +67,9 @@ class _LoginPageState extends State<LoginPage> {
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (ctx, state) {
             if (state.user != null) {
-              if (context.mounted)
-                context.go('/home'); // change to your landing route if needed
+              if (context.mounted) {
+                context.go('/home');
+              }
             } else if (state.error != null) {
               // show friendly error
               ScaffoldMessenger.of(
@@ -229,7 +230,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       const SizedBox(height: 6),
                       const Text(
-                        'Tip: use @newuu.uz email to pass mock check',
+                        'Use: admin@newuu.uz / 12345',
                         style: TextStyle(fontSize: 12, color: Colors.black54),
                       ),
                     ],

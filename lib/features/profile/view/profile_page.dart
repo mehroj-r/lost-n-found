@@ -2,14 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:lost_n_found/data/models/user.dart';
 
 class ProfilePage extends StatelessWidget {
-  final AppUser user;
+  final AppUser user = AppUser(
+    id: "1",
+    firstName: "John",
+    lastName: "Doe",
+    email: "",
+    avatarUrl: "",
+    phoneNumber: '',
+    gender: '',
+  );
 
-  const ProfilePage({super.key, required this.user});
+  ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(), // pink background
+      backgroundColor: Colors.white, // pink background
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
