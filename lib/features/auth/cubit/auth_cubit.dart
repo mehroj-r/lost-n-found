@@ -17,6 +17,22 @@ class AuthCubit extends Cubit<AuthState> {
   final IAuthRepository repo;
   AuthCubit(this.repo) : super(const AuthState());
 
+  /// Check if user is already authenticated on app startup
+  Future<void> checkAuthStatus() async {
+    final isLoggedIn = await repo.isLoggedIn();
+    if (isLoggedIn) {
+      try {
+        // Try to fetch user profile if logged in
+        final user = await ServiceLocator().userRepository.getCurrentUser();
+        emit(AuthState(user: user));
+      } catch (e) {
+        // If fetching profile fails, create a minimal user or logout
+        await repo.logout();
+        emit(const AuthState());
+      }
+    }
+  }
+
   // Helper: convert backend user map into AppUser (defensive, handles different shapes)
   AppUser _userFromMap(Map<String, dynamic> u) {
     // prefer explicit fields when present

@@ -93,6 +93,14 @@ class MockAuthRepository implements IAuthRepository {
     };
   }
 
+  @override
+  Future<bool> isLoggedIn() async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    // For mock, we can simulate being logged in by checking something
+    // For simplicity, let's just return false (no persistent state in mock)
+    return false;
+  }
+
   // Helper: simple capitalization
   String _capitalize(String s) {
     if (s.isEmpty) return s;

@@ -12,6 +12,10 @@ void main() async {
   await ServiceLocator().init();
   
   final authCubit = AuthCubit(ServiceLocator().authRepository);
+  
+  // Check authentication status on app startup
+  await authCubit.checkAuthStatus();
+  
   final router = buildRouter(authCubit);
   runApp(FindlyApp(authCubit: authCubit, router: router));
 }

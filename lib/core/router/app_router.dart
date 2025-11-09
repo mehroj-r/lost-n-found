@@ -9,7 +9,7 @@ import '../../features/profile/view/profile_page.dart';
 
 GoRouter buildRouter(AuthCubit authCubit) {
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/home',
     refreshListenable: GoRouterRefreshStream(authCubit.stream),
     redirect: (context, state) {
       final loggedIn = authCubit.state.user != null;

@@ -156,4 +156,10 @@ class ApiAuthRepository implements IAuthRepository {
 
     return responseData;
   }
+
+  @override
+  Future<bool> isLoggedIn() async {
+    final accessToken = await secureStorage.read(key: 'access_token');
+    return accessToken != null && accessToken.isNotEmpty;
+  }
 }
