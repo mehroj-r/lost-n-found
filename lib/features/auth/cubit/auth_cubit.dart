@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/di/service_locator.dart';
+import '../../../core/network/api_exception.dart';
 import '../../../data/models/user.dart';
-import '../../../data/repositories/mock_auth_repository.dart';
+import '../../../data/repositories/auth_repository.dart';
 
 class AuthState {
   final bool loading;
@@ -12,7 +14,7 @@ class AuthState {
 }
 
 class AuthCubit extends Cubit<AuthState> {
-  final MockAuthRepository repo;
+  final IAuthRepository repo;
   AuthCubit(this.repo) : super(const AuthState());
 
   // Helper: convert backend user map into AppUser (defensive, handles different shapes)
@@ -56,10 +58,24 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> login(String email, String password) async {
     emit(state.copyWith(loading: true, error: null));
     try {
-      final r = await repo.login(email, password);
-      final userMap = (r['user'] ?? <String, dynamic>{}) as Map<String, dynamic>;
-      final u = _userFromMap(userMap);
-      emit(AuthState(user: u));
+      // Login and save tokens
+      await repo.login(email, password);
+      
+      // Try to fetch user profile after successful login
+      try {
+        final user = await ServiceLocator().userRepository.getCurrentUser();
+        emit(AuthState(user: user));
+      } catch (profileError) {
+        // If profile fetch fails, create minimal user from email
+        final userData = {
+          'email': email,
+          'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        };
+        final u = _userFromMap(userData);
+        emit(AuthState(user: u));
+      }
+    } on ApiException catch (e) {
+      emit(AuthState(error: e.message));
     } catch (e) {
       emit(AuthState(error: e.toString()));
     }
@@ -67,24 +83,48 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> register({
     required String firstName,
-    required String lastName,
+    String? lastName,
     required String email,
     required String password,
     String? phoneNumber,
+    String? username,
+    String? patronymic,
+    required String gender,
   }) async {
     emit(state.copyWith(loading: true, error: null));
     try {
-      final r = await repo.register(
+      // Register and save tokens
+      await repo.register(
         firstName: firstName,
         lastName: lastName,
         email: email,
         password: password,
         phoneNumber: phoneNumber,
+        username: username,
+        patronymic: patronymic,
+        gender: gender,
       );
 
-      final userMap = (r['user'] ?? <String, dynamic>{}) as Map<String, dynamic>;
-      final u = _userFromMap(userMap);
-      emit(AuthState(user: u));
+      // Try to fetch user profile after successful registration
+      try {
+        final user = await ServiceLocator().userRepository.getCurrentUser();
+        emit(AuthState(user: user));
+      } catch (profileError) {
+        // If profile fetch fails, create from registration info
+        final userData = {
+          'email': email,
+          'first_name': firstName,
+          'last_name': lastName ?? '',
+          'username': username,
+          'patronymic': patronymic,
+          'gender': gender,
+          'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        };
+        final u = _userFromMap(userData);
+        emit(AuthState(user: u));
+      }
+    } on ApiException catch (e) {
+      emit(AuthState(error: e.message));
     } catch (e) {
       emit(AuthState(error: e.toString()));
     }

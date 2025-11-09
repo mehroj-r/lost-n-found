@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../data/models/post.dart';
+import '../../../shared/widgets/customAppBar.dart';
 import '../../../shared/widgets/postWidget.dart';
 
 class HomePage extends StatelessWidget {
@@ -82,8 +84,14 @@ class HomePage extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar (
-        title: const Text('Lost & Found'),
+      appBar: CustomAppBar(
+          hasNotifications: true,
+          onNotificationTap: () {
+            context.go('/notifications');
+          },
+          onProfileTap: () {
+            context.go('/profile');
+          },
       ),
       body: ListView.builder(
         itemCount: posts.length,
