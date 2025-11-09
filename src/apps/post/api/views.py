@@ -5,6 +5,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.account.models import User
 from apps.core.api.views.base import BaseAPIView
 from apps.core.utils.constants import PostType
 from apps.post.api.serializers import PostSerializer
@@ -19,8 +20,13 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         query = self.request.query_params.get('query', None)
         type = self.request.query_params.get('type', None)
+        user_id = self.request.query_params.get('user_id', None)
 
         self.queryset = self.queryset.select_related('author')
+
+        # User filtering
+        user = User.objects.filter(id=user_id).first() or request.user
+        self.queryset = self.queryset.filter(author=user)
 
         # Search filtering
         if query:

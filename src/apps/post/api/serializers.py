@@ -1,16 +1,19 @@
 from rest_framework import serializers
 
 from apps.account.api.serializers import UserSerializer
+from apps.file.api.serializers import FileSerializer
 from apps.post.models import Post
 
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
+    photo = FileSerializer(read_only=True)
 
     class Meta:
         model = Post
         fields = [
             'id',
+            'photo',
             'title',
             'description',
             'type',
