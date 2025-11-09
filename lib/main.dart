@@ -12,12 +12,14 @@ void main() async {
   await ServiceLocator().init();
   
   final authCubit = AuthCubit(ServiceLocator().authRepository);
-  
-  // Check authentication status on app startup
-  await authCubit.checkAuthStatus();
-  
   final router = buildRouter(authCubit);
+  
+  // Start the app and then check authentication status
+  // This allows the splash screen to be shown during auth check
   runApp(FindlyApp(authCubit: authCubit, router: router));
+  
+  // Check authentication status after app starts
+  authCubit.checkAuthStatus();
 }
 
 class FindlyApp extends StatelessWidget {

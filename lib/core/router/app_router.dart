@@ -6,30 +6,52 @@ import '../../features/auth/cubit/auth_cubit.dart';
 import '../../features/auth/view/login_page.dart';
 import '../../features/home/view/home_page.dart';
 import '../../features/profile/view/profile_page.dart';
+import '../../features/splash/view/splash_page.dart';
 
 GoRouter buildRouter(AuthCubit authCubit) {
   return GoRouter(
-    initialLocation: '/home',
+    initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(authCubit.stream),
     redirect: (context, state) {
+      final isInitializing = authCubit.state.initializing;
       final loggedIn = authCubit.state.user != null;
-      final isLoginPage = state.matchedLocation == '/login';
-      final isRegisterPage = state.matchedLocation == '/register';
-
-      // If not logged in and trying to access protected routes, redirect to login
-      if (!loggedIn && !isLoginPage && !isRegisterPage) {
-        return '/login';
+      final currentLocation = state.matchedLocation;
+      
+      // Show splash screen while initializing
+      if (isInitializing && currentLocation != '/splash') {
+        return '/splash';
       }
+      
+      // After initialization, handle auth-based redirects
+      if (!isInitializing) {
+        final isLoginPage = currentLocation == '/login';
+        final isRegisterPage = currentLocation == '/register';
+        final isSplashPage = currentLocation == '/splash';
 
-      // If logged in and trying to access login/register, redirect to home
-      if (loggedIn && (isLoginPage || isRegisterPage)) {
-        return '/home';
+        // If on splash page and initialization is done, redirect based on auth state
+        if (isSplashPage) {
+          return loggedIn ? '/home' : '/login';
+        }
+
+        // If not logged in and trying to access protected routes, redirect to login
+        if (!loggedIn && !isLoginPage && !isRegisterPage) {
+          return '/login';
+        }
+
+        // If logged in and trying to access login/register, redirect to home
+        if (loggedIn && (isLoginPage || isRegisterPage)) {
+          return '/home';
+        }
       }
 
       // No redirect needed
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (_, __) => const SplashPage(),
+      ),
       GoRoute(
         path: '/login',
         builder: (_, __) => const LoginPage(),

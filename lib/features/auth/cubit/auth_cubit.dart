@@ -6,11 +6,17 @@ import '../../../data/repositories/auth_repository.dart';
 
 class AuthState {
   final bool loading;
+  final bool initializing;
   final AppUser? user;
   final String? error;
-  const AuthState({this.loading = false, this.user, this.error});
-  AuthState copyWith({bool? loading, AppUser? user, String? error}) =>
-      AuthState(loading: loading ?? this.loading, user: user ?? this.user, error: error);
+  const AuthState({this.loading = false, this.initializing = true, this.user, this.error});
+  AuthState copyWith({bool? loading, bool? initializing, AppUser? user, String? error}) =>
+      AuthState(
+        loading: loading ?? this.loading, 
+        initializing: initializing ?? this.initializing,
+        user: user ?? this.user, 
+        error: error
+      );
 }
 
 class AuthCubit extends Cubit<AuthState> {
@@ -24,12 +30,14 @@ class AuthCubit extends Cubit<AuthState> {
       try {
         // Try to fetch user profile if logged in
         final user = await ServiceLocator().userRepository.getCurrentUser();
-        emit(AuthState(user: user));
+        emit(AuthState(user: user, initializing: false));
       } catch (e) {
         // If fetching profile fails, create a minimal user or logout
         await repo.logout();
-        emit(const AuthState());
+        emit(const AuthState(initializing: false));
       }
+    } else {
+      emit(const AuthState(initializing: false));
     }
   }
 
@@ -88,12 +96,12 @@ class AuthCubit extends Cubit<AuthState> {
           'id': DateTime.now().millisecondsSinceEpoch.toString(),
         };
         final u = _userFromMap(userData);
-        emit(AuthState(user: u));
+        emit(AuthState(user: u, initializing: false));
       }
     } on ApiException catch (e) {
-      emit(AuthState(error: e.message));
+      emit(AuthState(error: e.message, initializing: false));
     } catch (e) {
-      emit(AuthState(error: e.toString()));
+      emit(AuthState(error: e.toString(), initializing: false));
     }
   }
 
@@ -137,12 +145,12 @@ class AuthCubit extends Cubit<AuthState> {
           'id': DateTime.now().millisecondsSinceEpoch.toString(),
         };
         final u = _userFromMap(userData);
-        emit(AuthState(user: u));
+        emit(AuthState(user: u, initializing: false));
       }
     } on ApiException catch (e) {
-      emit(AuthState(error: e.message));
+      emit(AuthState(error: e.message, initializing: false));
     } catch (e) {
-      emit(AuthState(error: e.toString()));
+      emit(AuthState(error: e.toString(), initializing: false));
     }
   }
 
@@ -152,7 +160,7 @@ class AuthCubit extends Cubit<AuthState> {
       await repo.logout();
     } catch (_) {
     } finally {
-      emit(const AuthState());
+      emit(const AuthState(initializing: false));
     }
   }
 }
