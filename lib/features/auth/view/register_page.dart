@@ -136,9 +136,14 @@ class _RegisterPageState extends State<RegisterPage> {
       body: SafeArea(
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (ctx, state) {
-            if (state.user != null) {
-              // registration succeeded -> navigate to home (same as login)
-              if (context.mounted) context.go('/home');
+            if (state.registrationSuccess) {
+              // registration succeeded -> navigate to login
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Registration successful! Please login.')),
+                );
+                context.go('/login');
+              }
             } else if (state.error != null) {
               // show error message
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error!)));

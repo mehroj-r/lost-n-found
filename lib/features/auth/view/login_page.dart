@@ -66,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (ctx, state) {
-            if (state.user != null) {
+            if (state.user != null && !state.loading) {
               if (context.mounted) {
                 context.go('/home');
               }
