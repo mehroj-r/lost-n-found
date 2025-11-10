@@ -1,11 +1,14 @@
+import 'user.dart';
+import 'photo.dart';
+
 class Post {
-  final String id;
+  final int id;
   final String title;
   final String description;
-  final String photo;
+  final Photo? photo;
   final List<String> tags;
   final String type;  // 'lost', 'found'
-  final String author;
+  final AppUser author;
   final String location;
   final int likeCount;
   final bool isLiked;
@@ -16,7 +19,7 @@ class Post {
     required this.id,
     required this.title,
     required this.description,
-    required this.photo,
+    this.photo,
     required this.tags,
     required this.type,
     required this.author,
@@ -29,24 +32,22 @@ class Post {
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
-      id: json['id']?.toString() ?? '',
+      id: json['id'] ?? 0,
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      photo: json['photo']?.toString() ?? json['photoUrl']?.toString() ?? '',
+      photo: json['photo'] != null ? Photo.fromJson(json['photo']) : null,
       tags: json['tags'] != null 
           ? List<String>.from(json['tags'] as List)
           : [],
-      type: json['type']?.toString() ?? json['category']?.toString() ?? 'lost',
-      author: json['author']?.toString() ?? json['authorName']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'lost',
+      author: AppUser.fromJson(json['author'] ?? {}),
       location: json['location']?.toString() ?? '',
-      likeCount: json['likeCount'] ?? json['likes'] ?? 0,
-      isLiked: json['isLiked'] ?? json['is_liked'] ?? false,
-      isCompleted: json['isCompleted'] ?? json['is_completed'] ?? false,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : json['created_at'] != null
-              ? DateTime.parse(json['created_at'])
-              : DateTime.now(),
+      likeCount: json['like_count'] ?? 0,
+      isLiked: json['is_liked'] ?? false,
+      isCompleted: json['is_completed'] ?? false,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
     );
   }
 
@@ -55,15 +56,15 @@ class Post {
       'id': id,
       'title': title,
       'description': description,
-      'photo': photo,
+      'photo': photo?.toJson(),
       'tags': tags,
       'type': type,
-      'author': author,
+      'author': author.toJson(),
       'location': location,
-      'likeCount': likeCount,
-      'isLiked': isLiked,
-      'isCompleted': isCompleted,
-      'createdAt': createdAt.toIso8601String(),
+      'like_count': likeCount,
+      'is_liked': isLiked,
+      'is_completed': isCompleted,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 }

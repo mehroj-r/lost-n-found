@@ -20,6 +20,7 @@ class ApiConfig {
   static const String postsUpdate = '/posts/'; // + {id}/
   static const String postsDelete = '/posts/'; // + {id}/
   static const String postsDetail = '/posts/'; // + {id}/
+  static const String postsLike = '/posts/'; // + {id}/likes/
   
   // User Endpoints
   static const String users = '/users/';

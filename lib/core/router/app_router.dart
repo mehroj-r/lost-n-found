@@ -6,6 +6,7 @@ import '../../features/auth/cubit/auth_cubit.dart';
 import '../../features/auth/view/login_page.dart';
 import '../../features/home/view/home_page.dart';
 import '../../features/profile/view/profile_page.dart';
+import '../../features/search/view/search_page.dart';
 import '../../features/splash/view/splash_page.dart';
 
 GoRouter buildRouter(AuthCubit authCubit) {
@@ -67,6 +68,10 @@ GoRouter buildRouter(AuthCubit authCubit) {
       GoRoute(
         path: '/profile',
         builder: (_, __) =>  ProfilePage(),
+      ),
+      GoRoute(
+        path: '/search',
+        builder: (_, __) => const SearchPage(),
       ),
       GoRoute(
         path: '/notifications',

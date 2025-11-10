@@ -1,4 +1,5 @@
 import '../../core/network/dio_client.dart';
+import '../../core/config/api_config.dart';
 import '../models/post.dart';
 
 abstract class IPostRepository {
@@ -14,6 +15,8 @@ abstract class IPostRepository {
   Future<void> deletePost(String id);
   Future<List<Post>> getMyPosts({int page = 1, int limit = 20});
   Future<List<Post>> searchPosts(String query, {int page = 1, int limit = 20});
+  Future<void> likePost(int postId);
+  Future<void> unlikePost(int postId);
 }
 
 class PostRepository implements IPostRepository {
@@ -24,7 +27,7 @@ class PostRepository implements IPostRepository {
   @override
   Future<List<Post>> getPosts({int page = 1, int limit = 20}) async {
     final response = await dioClient.get(
-      '/posts',
+      ApiConfig.posts,
       queryParameters: {
         'page': page,
         'limit': limit,
@@ -32,19 +35,21 @@ class PostRepository implements IPostRepository {
     );
 
     final data = response.data;
-    if (data is Map && data.containsKey('data')) {
+    if (data is Map && data['success'] == true && data.containsKey('data')) {
       final List items = data['data'] as List;
       return items.map((json) => Post.fromJson(json)).toList();
-    } else if (data is List) {
-      return data.map((json) => Post.fromJson(json)).toList();
     }
     return [];
   }
 
   @override
   Future<Post> getPostById(String id) async {
-    final response = await dioClient.get('/posts/$id');
-    return Post.fromJson(response.data);
+    final response = await dioClient.get('${ApiConfig.postsDetail}$id');
+    final data = response.data;
+    if (data is Map && data['success'] == true && data.containsKey('data')) {
+      return Post.fromJson(data['data']);
+    }
+    throw Exception('Failed to load post');
   }
 
   @override
@@ -57,48 +62,59 @@ class PostRepository implements IPostRepository {
     if (photoPath != null) {
       // Upload with file
       final response = await dioClient.uploadFile(
-        '/posts',
+        ApiConfig.postsCreate,
         photoPath,
         fileKey: 'photo',
         data: {
           'title': title,
           'description': description,
-          'category': category,
+          'type': category,
         },
       );
-      return Post.fromJson(response.data);
+      final data = response.data;
+      if (data is Map && data['success'] == true && data.containsKey('data')) {
+        return Post.fromJson(data['data']);
+      }
     } else {
       // Regular post without file
       final response = await dioClient.post(
-        '/posts',
+        ApiConfig.postsCreate,
         data: {
           'title': title,
           'description': description,
-          'category': category,
+          'type': category,
         },
       );
-      return Post.fromJson(response.data);
+      final data = response.data;
+      if (data is Map && data['success'] == true && data.containsKey('data')) {
+        return Post.fromJson(data['data']);
+      }
     }
+    throw Exception('Failed to create post');
   }
 
   @override
   Future<Post> updatePost(String id, Map<String, dynamic> data) async {
     final response = await dioClient.patch(
-      '/posts/$id',
+      '${ApiConfig.postsUpdate}$id/',
       data: data,
     );
-    return Post.fromJson(response.data);
+    final responseData = response.data;
+    if (responseData is Map && responseData['success'] == true && responseData.containsKey('data')) {
+      return Post.fromJson(responseData['data']);
+    }
+    throw Exception('Failed to update post');
   }
 
   @override
   Future<void> deletePost(String id) async {
-    await dioClient.delete('/posts/$id');
+    await dioClient.delete('${ApiConfig.postsDelete}$id/');
   }
 
   @override
   Future<List<Post>> getMyPosts({int page = 1, int limit = 20}) async {
     final response = await dioClient.get(
-      '/posts/my',
+      '${ApiConfig.posts}my/',
       queryParameters: {
         'page': page,
         'limit': limit,
@@ -106,11 +122,9 @@ class PostRepository implements IPostRepository {
     );
 
     final data = response.data;
-    if (data is Map && data.containsKey('data')) {
+    if (data is Map && data['success'] == true && data.containsKey('data')) {
       final List items = data['data'] as List;
       return items.map((json) => Post.fromJson(json)).toList();
-    } else if (data is List) {
-      return data.map((json) => Post.fromJson(json)).toList();
     }
     return [];
   }
@@ -118,21 +132,29 @@ class PostRepository implements IPostRepository {
   @override
   Future<List<Post>> searchPosts(String query, {int page = 1, int limit = 20}) async {
     final response = await dioClient.get(
-      '/posts/search',
+      ApiConfig.posts,
       queryParameters: {
-        'q': query,
+        'query': query,
         'page': page,
         'limit': limit,
       },
     );
 
     final data = response.data;
-    if (data is Map && data.containsKey('data')) {
+    if (data is Map && data['success'] == true && data.containsKey('data')) {
       final List items = data['data'] as List;
       return items.map((json) => Post.fromJson(json)).toList();
-    } else if (data is List) {
-      return data.map((json) => Post.fromJson(json)).toList();
     }
     return [];
+  }
+
+  @override
+  Future<void> likePost(int postId) async {
+    await dioClient.post('${ApiConfig.postsLike}$postId/likes/');
+  }
+
+  @override
+  Future<void> unlikePost(int postId) async {
+    await dioClient.delete('${ApiConfig.postsLike}$postId/likes/');
   }
 }

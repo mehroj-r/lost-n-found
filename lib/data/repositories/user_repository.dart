@@ -19,10 +19,12 @@ class UserRepository implements IUserRepository {
     final userData = responseData['data'] as Map<String, dynamic>? ?? responseData;
     
     return AppUser(
-      id: userData['id']?.toString() ?? '',
+      id: userData['id'] ?? 0,
       firstName: userData['first_name']?.toString() ?? userData['firstName']?.toString() ?? '',
       lastName: userData['last_name']?.toString() ?? userData['lastName']?.toString() ?? '',
+      patronymic: userData['patronymic']?.toString(),
       email: userData['email']?.toString() ?? '',
+      username: userData['username']?.toString() ?? '',
       phoneNumber: userData['phone']?.toString() ?? userData['phone_number']?.toString() ?? userData['phoneNumber']?.toString() ?? '',
       gender: userData['gender']?.toString() ?? '',
       avatarUrl: userData['avatar']?.toString() ?? userData['avatar_url']?.toString() ?? userData['avatarUrl']?.toString(),
@@ -37,10 +39,12 @@ class UserRepository implements IUserRepository {
     final userData = responseData['data'] as Map<String, dynamic>? ?? responseData;
     
     return AppUser(
-      id: userData['id']?.toString() ?? '',
+      id: userData['id'] ?? 0,
       firstName: userData['first_name']?.toString() ?? userData['firstName']?.toString() ?? '',
       lastName: userData['last_name']?.toString() ?? userData['lastName']?.toString() ?? '',
+      patronymic: userData['patronymic']?.toString(),
       email: userData['email']?.toString() ?? '',
+      username: userData['username']?.toString() ?? '',
       phoneNumber: userData['phone_number']?.toString() ?? userData['phoneNumber']?.toString() ?? '',
       gender: userData['gender']?.toString() ?? '',
       avatarUrl: userData['avatar_url']?.toString() ?? userData['avatarUrl']?.toString(),

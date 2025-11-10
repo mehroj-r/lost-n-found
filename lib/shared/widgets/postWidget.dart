@@ -133,8 +133,8 @@ class _PostWidgetState extends State<PostWidget> {
                   topLeft: Radius.circular(16),
                   bottomLeft: Radius.circular(16),
                 ),
-                child: Image.network(
-                  widget.post.photo,
+                child: widget.post.photo?.url != null && widget.post.photo!.url.isNotEmpty ? Image.network(
+                  widget.post.photo!.url,
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
@@ -198,6 +198,36 @@ class _PostWidgetState extends State<PostWidget> {
                       ),
                     );
                   },
+                ) : Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.grey[300]!,
+                        Colors.grey[200]!,
+                      ],
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.image_outlined,
+                        size: 40,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No image',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

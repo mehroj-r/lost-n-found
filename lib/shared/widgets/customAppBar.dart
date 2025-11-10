@@ -5,6 +5,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String searchHint;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onSearchTap;
   final bool hasNotifications;
 
   const CustomAppBar({
@@ -13,6 +14,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.searchHint = 'What are you looking for ?',
     this.onNotificationTap,
     this.onProfileTap,
+    this.onSearchTap,
     this.hasNotifications = false,
   });
 
@@ -42,6 +44,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               child: _SearchField(
                 controller: searchController,
                 hint: searchHint,
+                onTap: onSearchTap,
               ),
             ),
             const SizedBox(width: 12),
@@ -66,46 +69,54 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 class _SearchField extends StatelessWidget {
   final TextEditingController? controller;
   final String hint;
+  final VoidCallback? onTap;
 
   const _SearchField({
     this.controller,
     required this.hint,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.grey[300]!,
-          width: 1,
-        ),
-      ),
-      child: TextField(
-        controller: controller,
-        style: const TextStyle(
-          fontSize: 15,
-          color: Color(0xFF1A1A1A),
-        ),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(
-            fontSize: 15,
-            color: Colors.grey[500],
-            fontWeight: FontWeight.w400,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.grey[300]!,
+            width: 1,
           ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: Colors.grey[600],
-            size: 24,
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
+        ),
+        child: AbsorbPointer(
+          absorbing: onTap != null, // Disable text field if onTap is provided
+          child: TextField(
+            controller: controller,
+            style: const TextStyle(
+              fontSize: 15,
+              color: Color(0xFF1A1A1A),
+            ),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(
+                fontSize: 15,
+                color: Colors.grey[500],
+                fontWeight: FontWeight.w400,
+              ),
+              prefixIcon: Icon(
+                Icons.search,
+                color: Colors.grey[600],
+                size: 24,
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+            ),
           ),
         ),
       ),
