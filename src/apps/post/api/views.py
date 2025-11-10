@@ -25,8 +25,8 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
         self.queryset = self.queryset.select_related('author')
 
         # User filtering
-        user = User.objects.filter(id=user_id).first() or request.user
-        self.queryset = self.queryset.filter(author=user)
+        if user_id:
+            self.queryset = self.queryset.filter(author_id=user_id)
 
         # Search filtering
         if query:
