@@ -5,7 +5,6 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.account.models import User
 from apps.core.api.views.base import BaseAPIView
 from apps.core.utils.constants import PostType
 from apps.post.api.serializers import PostSerializer
