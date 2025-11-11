@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lost_n_found/data/models/user.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -17,12 +18,20 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white, // pink background
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) return;
+        
+        // Handle back gesture - go back to home
+        context.go('/home');
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white, // pink background
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Title
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -119,6 +128,7 @@ class ProfilePage extends StatelessWidget {
             )
           ],
         ),
+      ),
       ),
     );
   }

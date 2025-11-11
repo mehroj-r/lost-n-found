@@ -26,38 +26,44 @@ class ServiceLocator {
   Future<void> init() async {
     if (_isInitialized) return;
 
-    // Initialize secure storage
-    _secureStorage = const FlutterSecureStorage(
-      aOptions: AndroidOptions(
-        encryptedSharedPreferences: true,
-      ),
-    );
+    try {
+      // Initialize secure storage with error handling
+      _secureStorage = const FlutterSecureStorage(
+        aOptions: AndroidOptions(
+          encryptedSharedPreferences: true,
+        ),
+      );
 
-    // Initialize connectivity
-    _connectivity = Connectivity();
-    _networkInfo = NetworkInfo(_connectivity);
+      // Initialize connectivity
+      _connectivity = Connectivity();
+      _networkInfo = NetworkInfo(_connectivity);
 
-    // Initialize Dio client
-    _dioClient = DioClient(
-      baseUrl: ApiConfig.baseUrl,
-      networkInfo: _networkInfo,
-      secureStorage: _secureStorage,
-      onTokenRefresh: _refreshToken,
-      connectTimeout: ApiConfig.connectTimeout,
-      receiveTimeout: ApiConfig.receiveTimeout,
-      sendTimeout: ApiConfig.sendTimeout,
-    );
+      // Initialize Dio client
+      _dioClient = DioClient(
+        baseUrl: ApiConfig.baseUrl,
+        networkInfo: _networkInfo,
+        secureStorage: _secureStorage,
+        onTokenRefresh: _refreshToken,
+        connectTimeout: ApiConfig.connectTimeout,
+        receiveTimeout: ApiConfig.receiveTimeout,
+        sendTimeout: ApiConfig.sendTimeout,
+      );
 
-    // Initialize repositories
-    _authRepository = ApiAuthRepository(
-      dioClient: _dioClient,
-      secureStorage: _secureStorage,
-    );
+      // Initialize repositories
+      _authRepository = ApiAuthRepository(
+        dioClient: _dioClient,
+        secureStorage: _secureStorage,
+      );
 
-    _postRepository = PostRepository(dioClient: _dioClient);
-    _userRepository = UserRepository(dioClient: _dioClient);
+      _postRepository = PostRepository(dioClient: _dioClient);
+      _userRepository = UserRepository(dioClient: _dioClient);
 
-    _isInitialized = true;
+      _isInitialized = true;
+    } catch (e) {
+      // Reset initialization flag on error
+      _isInitialized = false;
+      rethrow;
+    }
   }
 
   // Token refresh callback

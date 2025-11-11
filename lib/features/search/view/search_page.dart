@@ -14,6 +14,7 @@ class _SearchPageState extends State<SearchPage> {
   late search_ctrl.SearchController _searchController;
   late TextEditingController _textController;
   late FocusNode _focusNode;
+  bool _disposed = false;
 
   @override
   void initState() {
@@ -24,13 +25,17 @@ class _SearchPageState extends State<SearchPage> {
 
     // Load recent posts when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _searchController.loadRecentPosts();
-      _focusNode.requestFocus(); // Auto-focus search bar
+      if (!_disposed && mounted) {
+        _searchController.loadRecentPosts();
+        _focusNode.requestFocus(); // Auto-focus search bar
+      }
     });
   }
 
   @override
   void dispose() {
+    _disposed = true;
+    _searchController.clearSearch();
     _searchController.dispose();
     _textController.dispose();
     _focusNode.dispose();
@@ -39,35 +44,61 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: _buildSearchBar(),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          AnimatedBuilder(
-            animation: _searchController,
-            builder: (context, child) {
-              return _searchController.currentQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _textController.clear();
-                        _searchController.clearSearch();
-                      },
-                    )
-                  : const SizedBox.shrink();
+    return PopScope(
+      canPop: false, // We handle the pop ourselves
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) return;
+        
+        // Handle back gesture - same logic as back button
+        if (!_disposed) {
+          _searchController.clearSearch();
+        }
+        
+        // Navigate back to home
+        context.go('/home');
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              // Clean up search state
+              if (!_disposed) {
+                _searchController.clearSearch();
+              }
+              
+              // Use GoRouter navigation
+              context.go('/home');
             },
           ),
-        ],
-      ),
-      body: AnimatedBuilder(
+          title: SizedBox(
+            height: 40,
+            child: _buildSearchBar(),
+          ),
+          actions: [
+            AnimatedBuilder(
+              animation: _searchController,
+              builder: (context, child) {
+                return _searchController.currentQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _textController.clear();
+                          _searchController.clearSearch();
+                        },
+                      )
+                    : const SizedBox.shrink();
+              },
+            ),
+          ],
+        ),
+      body: _disposed ? const SizedBox.shrink() : AnimatedBuilder(
         animation: _searchController,
         builder: (context, child) {
+          if (_disposed || !mounted) return const SizedBox.shrink();
           return _buildBody();
         },
+      ),
       ),
     );
   }
@@ -76,10 +107,16 @@ class _SearchPageState extends State<SearchPage> {
     return TextField(
       controller: _textController,
       focusNode: _focusNode,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         hintText: 'Search posts...',
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: Colors.grey[100],
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        prefixIcon: const Icon(Icons.search, color: Colors.grey),
       ),
       textInputAction: TextInputAction.search,
       onChanged: (query) {
