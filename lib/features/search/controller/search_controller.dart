@@ -42,7 +42,9 @@ class SearchController extends ChangeNotifier {
 
     // Add debounce delay for progressive search
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      _performSearch(_currentQuery);
+      if (!_disposed && query == _currentQuery) {
+        _performSearch(_currentQuery);
+      }
     });
   }
 
@@ -90,12 +92,16 @@ class SearchController extends ChangeNotifier {
 
   // Clear search
   void clearSearch() {
+    if (_disposed) return;
+    
     _currentQuery = '';
     _searchResults.clear();
     _hasSearched = false;
     _error = null;
     _debounceTimer?.cancel();
-    notifyListeners();
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 
   // Instant search (without debounce) - for search button press

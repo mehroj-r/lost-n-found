@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,7 +7,7 @@ import '../../../shared/widgets/postWidget.dart';
 import '../controller/home_controller.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -159,7 +160,9 @@ class _HomePageState extends State<HomePage> {
                   post: post,
                   onTap: () {
                     // Navigate to detail page
-                    print('Tapped on post: ${post.title}');
+                    if (kDebugMode) {
+                      print('Tapped on post: ${post.title}');
+                    }
                   },
                   onLikeToggle: (isLiked) {
                     _controller.toggleLike(post.id, isLiked);
