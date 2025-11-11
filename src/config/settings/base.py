@@ -2,6 +2,8 @@ from pathlib import Path
 from decouple import config
 import dj_database_url
 
+from config.settings.dev import CORS_ALLOW_ALL_ORIGINS
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DEBUG = config("DEBUG", default=False, cast=bool)
 SECRET_KEY = config("DJANGO_SECRET_KEY", default="django-insecure-change-me")
@@ -165,3 +167,5 @@ UNFOLD = {
         "show_search": False,
     },
 }
+
+CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="").split(",")
