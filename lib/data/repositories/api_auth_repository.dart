@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../core/config/api_config.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/network/dio_client.dart';
 import 'auth_repository.dart';
 
@@ -23,6 +24,18 @@ class ApiAuthRepository implements IAuthRepository {
     );
 
     final responseData = response.data as Map<String, dynamic>;
+    
+    // Check if login was successful
+    final success = responseData['success'];
+    if (success == false) {
+      final errorMessage = responseData['message'] ?? 'Login failed';
+      throw ApiException(
+        message: errorMessage,
+        statusCode: response.statusCode,
+        errorCode: 'LOGIN_FAILED',
+        data: responseData,
+      );
+    }
     
     // Extract data from the response structure: { success, message, data }
     final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
@@ -77,6 +90,18 @@ class ApiAuthRepository implements IAuthRepository {
     );
 
     final responseData = response.data as Map<String, dynamic>;
+    
+    // Check if registration was successful
+    final success = responseData['success'];
+    if (success == false) {
+      final errorMessage = responseData['message'] ?? 'Registration failed';
+      throw ApiException(
+        message: errorMessage,
+        statusCode: response.statusCode,
+        errorCode: 'REGISTRATION_FAILED',
+        data: responseData,
+      );
+    }
     
     // Extract data from the response structure: { success, message, data }
     final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
@@ -155,5 +180,11 @@ class ApiAuthRepository implements IAuthRepository {
     }
 
     return responseData;
+  }
+
+  @override
+  Future<bool> isLoggedIn() async {
+    final accessToken = await secureStorage.read(key: 'access_token');
+    return accessToken != null && accessToken.isNotEmpty;
   }
 }

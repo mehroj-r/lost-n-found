@@ -3,13 +3,14 @@ import 'package:lost_n_found/data/models/user.dart';
 
 class ProfilePage extends StatelessWidget {
   final AppUser user = AppUser(
-    id: "1",
+    id: 1,
     firstName: "John",
     lastName: "Doe",
-    email: "",
+    username: "johndoe",
+    email: "john@example.com",
     avatarUrl: "",
-    phoneNumber: '',
-    gender: '',
+    phoneNumber: '+998901234567',
+    gender: 'male',
   );
 
   ProfilePage({super.key});

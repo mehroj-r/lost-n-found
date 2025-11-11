@@ -2,7 +2,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../data/repositories/api_auth_repository.dart';
 import '../../data/repositories/auth_repository.dart';
-import '../../data/repositories/mock_auth_repository.dart';
 import '../../data/repositories/post_repository.dart';
 import '../../data/repositories/user_repository.dart';
 import '../config/api_config.dart';
@@ -23,9 +22,6 @@ class ServiceLocator {
   late final IUserRepository _userRepository;
 
   bool _isInitialized = false;
-
-  // Use mock or real API
-  static const bool useMockData = false; // Set to false when real API is ready
 
   Future<void> init() async {
     if (_isInitialized) return;
@@ -53,14 +49,10 @@ class ServiceLocator {
     );
 
     // Initialize repositories
-    if (useMockData) {
-      _authRepository = MockAuthRepository();
-    } else {
-      _authRepository = ApiAuthRepository(
-        dioClient: _dioClient,
-        secureStorage: _secureStorage,
-      );
-    }
+    _authRepository = ApiAuthRepository(
+      dioClient: _dioClient,
+      secureStorage: _secureStorage,
+    );
 
     _postRepository = PostRepository(dioClient: _dioClient);
     _userRepository = UserRepository(dioClient: _dioClient);

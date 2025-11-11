@@ -13,4 +13,5 @@ abstract class IAuthRepository {
 
   Future<void> logout();
   Future<Map<String, dynamic>> refresh(String refreshToken);
+  Future<bool> isLoggedIn();
 }
