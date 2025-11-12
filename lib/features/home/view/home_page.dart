@@ -98,10 +98,13 @@ class HomePage extends StatelessWidget {
         itemBuilder: (context, index) {
           return PostWidget(
             post: posts[index],
-            onTap: () {
-              // Navigate to detail page
-              print('Tapped on post: ${posts[index].title}');
-            },
+              onTap: () {
+                print('Post clicked: ${posts[index].id}');
+                context.go(
+                  '/posts/${posts[index].id}',
+                  extra: posts[index], // pass the whole Post object
+                );
+              },
             onLikeToggle: (isLiked) {
               // Handle like toggle
               print('Post liked: $isLiked');

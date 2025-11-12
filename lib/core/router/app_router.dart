@@ -8,6 +8,10 @@ import '../../features/home/view/home_page.dart';
 import '../../features/profile/view/profile_page.dart';
 import '../../features/splash/view/splash_page.dart';
 
+import 'package:lost_n_found/data/models/post.dart';
+import 'package:lost_n_found/features/posts/view/post_detail_page.dart';
+
+
 GoRouter buildRouter(AuthCubit authCubit) {
   return GoRouter(
     initialLocation: '/splash',
@@ -63,6 +67,13 @@ GoRouter buildRouter(AuthCubit authCubit) {
       GoRoute(
         path: '/home',
         builder: (_, __) => const HomePage(),
+      ),
+      GoRoute(
+        path: '/posts/:id',
+        builder: (context, state) {
+          final post = state.extra as Post;
+          return PostDetailPage(post: post);
+        },
       ),
       GoRoute(
         path: '/profile',
