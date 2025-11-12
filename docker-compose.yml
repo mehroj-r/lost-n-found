@@ -15,7 +15,7 @@ services:
     container_name: findly-dev-web
     entrypoint: /app/scripts/entrypoint.sh
     volumes:
-      - ./cdn/static:/app/cdn/staticfiles
+      - ./cdn/static:/app/cdn/static
       - ./cdn/media:/app/cdn/media
     ports:
       - "127.0.0.1:${APP_PORT}:8000"
