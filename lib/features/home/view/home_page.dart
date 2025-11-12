@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/widgets/customAppBar.dart';
 import '../../../shared/widgets/postWidget.dart';
 import '../controller/home_controller.dart';
 
@@ -49,17 +48,28 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        hasNotifications: true,
-        onNotificationTap: () {
-          context.go('/notifications');
-        },
-        onProfileTap: () {
-          context.go('/profile');
-        },
-        onSearchTap: () {
-          context.go('/search');
-        },
+      appBar: AppBar(
+        title: const Text(
+          'Findly',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              context.go('/search');
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {
+              context.go('/notifications');
+            },
+          ),
+        ],
       ),
       body: AnimatedBuilder(
         animation: _controller,

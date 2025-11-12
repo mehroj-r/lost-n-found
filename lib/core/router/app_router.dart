@@ -7,7 +7,10 @@ import '../../features/auth/view/login_page.dart';
 import '../../features/home/view/home_page.dart';
 import '../../features/profile/view/profile_page.dart';
 import '../../features/search/view/search_page.dart';
+import '../../features/explore/view/explore_page.dart';
+import '../../features/upload/view/upload_page.dart';
 import '../../features/splash/view/splash_page.dart';
+import '../../shared/widgets/main_scaffold.dart';
 
 GoRouter buildRouter(AuthCubit authCubit) {
   return GoRouter(
@@ -61,14 +64,38 @@ GoRouter buildRouter(AuthCubit authCubit) {
         path: '/register',
         builder: (_, __) => const RegisterPage(),
       ),
+      
+      // Bottom navigation routes wrapped in MainScaffold
       GoRoute(
         path: '/home',
-        builder: (_, __) => const HomePage(),
+        builder: (context, state) => MainScaffold(
+          currentPath: '/home',
+          child: const HomePage(),
+        ),
+      ),
+      GoRoute(
+        path: '/explore',
+        builder: (context, state) => MainScaffold(
+          currentPath: '/explore',
+          child: const ExplorePage(),
+        ),
+      ),
+      GoRoute(
+        path: '/upload',
+        builder: (context, state) => MainScaffold(
+          currentPath: '/upload',
+          child: const UploadPage(),
+        ),
       ),
       GoRoute(
         path: '/profile',
-        builder: (_, __) =>  ProfilePage(),
+        builder: (context, state) => MainScaffold(
+          currentPath: '/profile',
+          child: ProfilePage(),
+        ),
       ),
+      
+      // Standalone pages without bottom navigation
       GoRoute(
         path: '/search',
         builder: (_, __) => const SearchPage(),
