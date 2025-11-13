@@ -12,6 +12,7 @@ import '../../features/explore/view/explore_page.dart';
 import '../../features/upload/view/upload_page.dart';
 import '../../features/splash/view/splash_page.dart';
 import '../../shared/widgets/main_scaffold.dart';
+import '../../features/profile/view/edit_profile.dart';
 
 GoRouter buildRouter(AuthCubit authCubit) {
   return GoRouter(
@@ -104,6 +105,13 @@ GoRouter buildRouter(AuthCubit authCubit) {
       GoRoute(
         path: '/notifications',
         builder: (_, __) => const HomePage(), // TODO: Create this page
+      ),
+      GoRoute(
+        path: '/edit-profile',
+        builder: (context, state) => MainScaffold(
+          currentPath: '/profile',
+          child: const EditProfilePage(),
+        ),
       ),
       GoRoute(
         path: '/my-posts',
