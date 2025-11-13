@@ -5,6 +5,7 @@ import 'package:lost_n_found/features/auth/view/register_page.dart';
 import '../../features/auth/cubit/auth_cubit.dart';
 import '../../features/auth/view/login_page.dart';
 import '../../features/home/view/home_page.dart';
+import '../../features/my_posts/view/my_posts.dart';
 import '../../features/profile/view/profile_page.dart';
 import '../../features/search/view/search_page.dart';
 import '../../features/explore/view/explore_page.dart';
@@ -103,6 +104,13 @@ GoRouter buildRouter(AuthCubit authCubit) {
       GoRoute(
         path: '/notifications',
         builder: (_, __) => const HomePage(), // TODO: Create this page
+      ),
+      GoRoute(
+        path: '/my-posts',
+        builder: (context, state) => MainScaffold(
+          currentPath: '/profile',
+          child: const MyPostsScreen(),
+        ),
       ),
     ],
   );

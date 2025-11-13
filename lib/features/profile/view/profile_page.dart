@@ -1,155 +1,252 @@
 import 'package:flutter/material.dart';
-import 'package:lost_n_found/data/models/user.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
-class ProfilePage extends StatelessWidget {
-  final AppUser user = AppUser(
-    id: 1,
-    firstName: "John",
-    lastName: "Doe",
-    username: "johndoe",
-    email: "john@example.com",
-    avatarUrl: "",
-    phoneNumber: '+998901234567',
-    gender: 'male',
-  );
+import '../../../data/models/user.dart';
+import '../../auth/cubit/auth_cubit.dart';
+import '../controller/profile_controller.dart';
 
-  ProfilePage({super.key});
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late ProfileController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final authCubit = context.read<AuthCubit>();
+    _controller = ProfileController(authCubit);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  AppUser? get _user => _controller.user;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: Text(
-                "My Profile",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            if (_controller.isLoading && _user == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (_controller.error != null && _user == null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Failed to load profile',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _controller.error!,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _controller.refresh,
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
-              ),
-            ),
+              );
+            }
 
-            // Profile Card
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // Profile image with fallback
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: Colors.grey[200],
-                    child: ClipOval(
-                      child: user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                          ? Image.network(
-                        user.avatarUrl!,
-                        width: 64,
-                        height: 64,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _initialsOrAsset(),
-                      )
-                          : _initialsOrAsset(),
+            if (_user == null) {
+              return Center(
+                child: Text(
+                  'No user data',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  child: Text(
+                    "My Profile",
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
 
-                  const SizedBox(width: 15),
-
-                  // Name + Email
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "${user.firstName} ${user.lastName}",
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          user.email,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
+                // Profile card
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.grey.shade200,
+                        child: ClipOval(
+                          child: (_user!.avatarUrl != null &&
+                              _user!.avatarUrl!.isNotEmpty)
+                              ? Image.network(
+                            _user!.avatarUrl!,
+                            width: 56,
+                            height: 56,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                _initialsCircle(_user!),
+                          )
+                              : _initialsCircle(_user!),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "${_user!.firstName} ${_user!.lastName}",
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _user!.email,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined),
+                        onPressed: () {
+                          // TODO: navigate to edit profile page
+                        },
+                      ),
+                    ],
+                  ),
+                ),
 
-                  // Edit icon
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined),
-                    onPressed: () {},
-                  )
-                ],
-              ),
-            ),
+                const SizedBox(height: 24),
 
-            const SizedBox(height: 25),
-
-            Expanded(
-              child: ListView(
-                children: [
-                  menuItem(Icons.list_alt, "My posts", () {}),
-                  menuItem(Icons.bookmark_added_outlined, "My claimed items", () {}),
-                  menuItem(Icons.location_on_outlined, "My Address", () {}),
-                  menuItem(Icons.settings_outlined, "Settings", () {}),
-                  menuItem(Icons.logout, "Sign out", () {}),
-                ],
-              ),
-            )
-          ],
+                Expanded(
+                  child: ListView(
+                    children: [
+                      _menuItem(
+                        icon: Icons.list_alt_outlined,
+                        title: 'My posts',
+                        onTap: () {
+                          context.go('/my-posts');
+                        },
+                      ),
+                      _menuItem(
+                        icon: Icons.bookmark_added_outlined,
+                        title: 'My claimed items',
+                        onTap: () {
+                          // TODO
+                        },
+                      ),
+                      _menuItem(
+                        icon: Icons.location_on_outlined,
+                        title: 'My Address',
+                        onTap: () {
+                          // TODO
+                        },
+                      ),
+                      _menuItem(
+                        icon: Icons.settings_outlined,
+                        title: 'Settings',
+                        onTap: () {
+                          // TODO
+                        },
+                      ),
+                      _menuItem(
+                        icon: Icons.logout,
+                        title: 'Sign out',
+                        onTap: () async {
+                          await _controller.signOut();
+                          if (mounted) {
+                            context.go('/login');
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  /// Returns initials widget or asset image as fallback
-  Widget _initialsOrAsset() {
-    if (user.firstName.isNotEmpty || user.lastName.isNotEmpty) {
-      return Center(
-        child: Text(
-          "${user.firstName.isNotEmpty ? user.firstName[0] : ''}${user.lastName.isNotEmpty ? user.lastName[0] : ''}",
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+  Widget _initialsCircle(AppUser user) {
+    final initials = [
+      if (user.firstName.isNotEmpty) user.firstName[0],
+      if (user.lastName.isNotEmpty) user.lastName[0],
+    ].join();
+
+    return Center(
+      child: Text(
+        (initials.isEmpty ? '?' : initials.toUpperCase()),
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey,
         ),
-      );
-    } else {
-      return Image.asset(
-        "assets/default_avatar.png",
-        width: 64,
-        height: 64,
-        fit: BoxFit.cover,
-      );
-    }
+      ),
+    );
   }
 
-  Widget menuItem(IconData icon, String title, VoidCallback onTap) {
+  Widget _menuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
           children: [
-            Icon(icon, size: 24, color: Colors.grey[800]),
+            Icon(icon, size: 24, color: Colors.grey.shade800),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
@@ -157,7 +254,11 @@ class ProfilePage extends StatelessWidget {
                 style: const TextStyle(fontSize: 16),
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey.shade500,
+            ),
           ],
         ),
       ),
