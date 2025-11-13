@@ -156,7 +156,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       IconButton(
                         icon: const Icon(Icons.edit_outlined),
                         onPressed: () {
-                          // TODO: navigate to edit profile page
+                          context.push('/edit-profile');
                         },
                       ),
                     ],
