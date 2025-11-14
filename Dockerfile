@@ -34,7 +34,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/* \
     && chmod +x /app/scripts/*.sh \
-    && mkdir -p /cdn /cdn/static /cdn/media \
-    && chown -R nonroot:nonroot /cdn /cdn/static /cdn/media
+    && mkdir -p /cdn \
+    && chown -R nonroot:nonroot /cdn
 
 USER nonroot
