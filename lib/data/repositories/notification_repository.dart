@@ -65,7 +65,7 @@ class ApiNotificationRepository implements INotificationRepository {
   @override
   Future<int> getUnreadCount() async {
     try {
-      final response = await _dio.get('/notifications/unread-count');
+      final response = await _dio.get('/notifications/unread-count/');
       
       if (response.statusCode == 200) {
         final data = response.data;

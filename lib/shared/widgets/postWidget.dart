@@ -70,6 +70,34 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
     widget.onLikeToggle?.call(_isLiked);
   }
 
+  Widget _buildAvatarFallback() {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).primaryColor.withValues(alpha: 0.8),
+            Theme.of(context).primaryColor,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          widget.post.author.firstName[0].toUpperCase(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
+        ),
+      ),
+    );
+  }
+
   Color _getStatusColor() {
     return widget.post.isCompleted 
         ? const Color(0xFF10B981) // Emerald green
@@ -140,9 +168,6 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
               
               // Content section
               _buildContentSection(),
-              
-              // Action buttons
-              _buildActionBar(),
             ],
           ),
         ),
@@ -155,19 +180,11 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       child: Row(
         children: [
-          // User avatar
+          // User avatar or initial
           Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).primaryColor.withValues(alpha: 0.8),
-                  Theme.of(context).primaryColor,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -177,16 +194,40 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
                 ),
               ],
             ),
-            child: Center(
-              child: Text(
-                widget.post.author.firstName[0].toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                ),
-              ),
-            ),
+            child: widget.post.author.avatar?.url != null && widget.post.author.avatar!.url.isNotEmpty
+                ? ClipOval(
+                    child: Image.network(
+                      widget.post.author.avatar!.url,
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _buildAvatarFallback(),
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                : _buildAvatarFallback(),
           ),
           const SizedBox(width: 12),
           
@@ -226,8 +267,8 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
             ),
           ),
           
-          // Status badge
-          _buildStatusBadge(),
+          // Message button (replacing status badge)
+          _buildCompactMessageButton(),
         ],
       ),
     );
@@ -290,7 +331,105 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
                 : _buildEnhancedPlaceholder(),
           ),
           
-          // Like button overlay
+          // Gradient overlay for better text visibility (only for images)
+          if (widget.post.photo?.url != null && widget.post.photo!.url.isNotEmpty)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.7),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          
+          // Title and location overlay (only for images)
+          if (widget.post.photo?.url != null && widget.post.photo!.url.isNotEmpty)
+            Positioned(
+              bottom: 16,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title
+                  Text(
+                    widget.post.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.2,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black54,
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  
+                  // Location
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_rounded,
+                        size: 14,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          widget.post.location,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            shadows: const [
+                              Shadow(
+                                color: Colors.black54,
+                                blurRadius: 3,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          
+          // Tags overlay (top-left)
+          if (widget.post.tags.isNotEmpty)
+            Positioned(
+              top: 12,
+              left: 12,
+              child: _buildOverlayTags(),
+            ),
+          
+          // Like button overlay (top-right)
           Positioned(
             top: 12,
             right: 12,
@@ -497,12 +636,12 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
       child: GestureDetector(
         onTap: _toggleLike,
         child: Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: _isLiked 
                 ? const Color(0xFFEF4444).withValues(alpha: 0.95)
-                : Colors.white.withValues(alpha: 0.95),
-            shape: BoxShape.circle,
+                : Colors.white.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
                 color: _isLiked 
@@ -513,12 +652,114 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
               ),
             ],
           ),
-          child: Icon(
-            _isLiked ? Icons.favorite : Icons.favorite_outline,
-            color: _isLiked ? Colors.white : Colors.grey[600],
-            size: 20,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _isLiked ? Icons.favorite : Icons.favorite_outline,
+                color: _isLiked ? Colors.white : Colors.grey[600],
+                size: 20,
+              ),
+              if (_likeCount > 0) ...[
+                const SizedBox(width: 6),
+                Text(
+                  _likeCount.toString(),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _isLiked ? Colors.white : Colors.grey[600],
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildOverlayTags() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: widget.post.tags.take(2).map((tag) => Container(
+          margin: const EdgeInsets.only(right: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Text(
+            tag,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        )).toList()
+        ..addAll(widget.post.tags.length > 2 ? [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Text(
+              '+${widget.post.tags.length - 2}',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
+            ),
+          ),
+        ] : []),
+      ),
+    );
+  }
+
+  Widget _buildOverlayMessageButton() {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Implement messaging
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Icon(
+          Icons.message_outlined,
+          size: 16,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTagsAndActionRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          // Tags (left side)
+          if (widget.post.tags.isNotEmpty) ...[
+            Expanded(
+              child: _buildCompactTags(),
+            ),
+          ] else ...[
+            const Spacer(),
+          ],
+          
+          const SizedBox(width: 12),
+          
+          // Message button (right side)
+          _buildCompactMessageButton(),
+        ],
       ),
     );
   }
@@ -529,65 +770,46 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title
-          Text(
-            widget.post.title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
-              height: 1.3,
-              letterSpacing: -0.2,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-          
-          // Description - always show if available
-          if (widget.post.description.isNotEmpty) ...[
+          // Only show title and location for placeholders (images have overlay)
+          if (widget.post.photo?.url == null || widget.post.photo!.url.isEmpty) ...[
+            // Title
             Text(
-              widget.post.description,
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w400,
-                height: 1.4,
+              widget.post.title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
+                height: 1.3,
+                letterSpacing: -0.2,
               ),
-              maxLines: 3,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 12),
-          ],
-          
-          // Location with icon
-          Row(
-            children: [
-              Icon(
-                Icons.location_on_rounded,
-                size: 16,
-                color: Theme.of(context).primaryColor,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  widget.post.location,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 8),
+            
+            // Location with icon
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on_rounded,
+                  size: 16,
+                  color: Theme.of(context).primaryColor,
                 ),
-              ),
-            ],
-          ),
-          
-          // Tags
-          if (widget.post.tags.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _buildTags(),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    widget.post.location,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ],
         ],
       ),
@@ -629,38 +851,6 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Like count
-          if (_likeCount > 0) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey[200]!),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.favorite,
-                    size: 14,
-                    color: const Color(0xFFEF4444),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _likeCount.toString(),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[700],
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-          ],
-          
           const Spacer(),
           
           // Action buttons
@@ -714,6 +904,73 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactTags() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: widget.post.tags.take(2).map((tag) => Container(
+          margin: const EdgeInsets.only(right: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Text(
+            tag,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).primaryColor,
+            ),
+          ),
+        )).toList()
+        ..addAll(widget.post.tags.length > 2 ? [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Text(
+              '+${widget.post.tags.length - 2}',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+        ] : []),
+      ),
+    );
+  }
+
+  Widget _buildCompactMessageButton() {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Implement messaging
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).primaryColor,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.message_outlined,
+          size: 18,
+          color: Colors.white,
         ),
       ),
     );

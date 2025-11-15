@@ -1,3 +1,5 @@
+import 'photo.dart';
+
 class AppUser {
   final int id;
   final String firstName;
@@ -8,6 +10,7 @@ class AppUser {
   final String username;
   final String gender;
   final String? avatarUrl;
+  final Photo? avatar;
 
   AppUser({
     required this.id,
@@ -19,6 +22,7 @@ class AppUser {
     required this.username,
     required this.gender,
     this.avatarUrl,
+    this.avatar,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
@@ -31,6 +35,7 @@ class AppUser {
     username: j['username'] as String? ?? '',
     gender: j['gender'] as String? ?? '',
     avatarUrl: j['avatarUrl'] as String?,
+    avatar: j['avatar'] != null ? Photo.fromJson(j['avatar']) : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -43,5 +48,6 @@ class AppUser {
     'username': username,
     'gender': gender,
     'avatarUrl': avatarUrl,
+    'avatar': avatar?.toJson(),
   };
 }
