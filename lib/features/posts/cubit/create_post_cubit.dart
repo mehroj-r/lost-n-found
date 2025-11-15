@@ -33,8 +33,8 @@ class CreatePostCubit extends Cubit<CreatePostState> {
   Future<void> createPost({
     required String title,
     required String description,
-    required String category,
-    String? photoPath,
+    required String type,
+    int? photoId,
   }) async {
     emit(CreatePostLoading());
     
@@ -42,8 +42,8 @@ class CreatePostCubit extends Cubit<CreatePostState> {
       final post = await postRepository.createPost(
         title: title,
         description: description,
-        category: category,
-        photoPath: photoPath,
+        type: type,
+        photoId: photoId,
       );
       
       emit(CreatePostSuccess(post));

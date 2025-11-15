@@ -8,8 +8,8 @@ abstract class IPostRepository {
   Future<Post> createPost({
     required String title,
     required String description,
-    required String category,
-    String? photoPath,
+    required String type,
+    int? photoId,
   });
   Future<Post> updatePost(String id, Map<String, dynamic> data);
   Future<void> deletePost(String id);
@@ -56,39 +56,22 @@ class PostRepository implements IPostRepository {
   Future<Post> createPost({
     required String title,
     required String description,
-    required String category,
-    String? photoPath,
+    required String type,
+    int? photoId,
   }) async {
-    if (photoPath != null) {
-      // Upload with file
-      final response = await dioClient.uploadFile(
-        ApiConfig.postsCreate,
-        photoPath,
-        fileKey: 'photo',
-        data: {
-          'title': title,
-          'description': description,
-          'type': category,
-        },
-      );
-      final data = response.data;
-      if (data is Map && data['success'] == true && data.containsKey('data')) {
-        return Post.fromJson(data['data']);
-      }
-    } else {
-      // Regular post without file
-      final response = await dioClient.post(
-        ApiConfig.postsCreate,
-        data: {
-          'title': title,
-          'description': description,
-          'type': category,
-        },
-      );
-      final data = response.data;
-      if (data is Map && data['success'] == true && data.containsKey('data')) {
-        return Post.fromJson(data['data']);
-      }
+    final response = await dioClient.post(
+      ApiConfig.postsCreate,
+      data: {
+        'title': title,
+        'description': description,
+        'type': type,
+        'is_completed': false,
+        if (photoId != null) 'photo': photoId,
+      },
+    );
+    final data = response.data;
+    if (data is Map && data['success'] == true && data.containsKey('data')) {
+      return Post.fromJson(data['data']);
     }
     throw Exception('Failed to create post');
   }

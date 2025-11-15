@@ -22,6 +22,9 @@ class ApiConfig {
   static const String postsDetail = '/posts/'; // + {id}/
   static const String postsLike = '/posts/'; // + {id}/likes/
   
+  // File Endpoints
+  static const String files = '/files/';
+
   // User Endpoints
   static const String users = '/users/';
   static const String userDetail = '/users/'; // + {id}/

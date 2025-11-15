@@ -4,6 +4,7 @@ import '../../data/repositories/api_auth_repository.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/post_repository.dart';
 import '../../data/repositories/user_repository.dart';
+import '../../data/repositories/file_repository.dart';
 import '../config/api_config.dart';
 import '../network/dio_client.dart';
 import '../network/network_info.dart';
@@ -20,6 +21,7 @@ class ServiceLocator {
   late final IAuthRepository _authRepository;
   late final IPostRepository _postRepository;
   late final IUserRepository _userRepository;
+  late final IFileRepository _fileRepository;
 
   bool _isInitialized = false;
 
@@ -57,6 +59,7 @@ class ServiceLocator {
 
       _postRepository = PostRepository(dioClient: _dioClient);
       _userRepository = UserRepository(dioClient: _dioClient);
+      _fileRepository = FileRepository(dioClient: _dioClient);
 
       _isInitialized = true;
     } catch (e) {
@@ -69,7 +72,7 @@ class ServiceLocator {
   // Token refresh callback
   Future<void> _refreshToken(String refreshToken) async {
     final tokens = await _authRepository.refresh(refreshToken);
-    
+
     if (tokens.containsKey('accessToken')) {
       await _secureStorage.write(
         key: 'access_token',
@@ -113,6 +116,11 @@ class ServiceLocator {
   IUserRepository get userRepository {
     _ensureInitialized();
     return _userRepository;
+  }
+
+  IFileRepository get fileRepository {
+    _ensureInitialized();
+    return _fileRepository;
   }
 
   void _ensureInitialized() {
