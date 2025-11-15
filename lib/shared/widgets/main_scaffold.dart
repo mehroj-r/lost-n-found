@@ -20,7 +20,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     switch (widget.currentPath) {
       case '/home':
         return 0;
-      case '/explore':
+      case '/search':
         return 1;
       case '/upload':
         return 2;
@@ -37,7 +37,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         context.go('/home');
         break;
       case 1:
-        context.go('/explore');
+        context.go('/search');
         break;
       case 2:
         context.go('/upload');
@@ -89,9 +89,9 @@ class _MainScaffoldState extends State<MainScaffold> {
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.explore_outlined),
-              activeIcon: Icon(Icons.explore),
-              label: 'Explore',
+              icon: Icon(Icons.search_outlined),
+              activeIcon: Icon(Icons.search),
+              label: 'Search',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.add_circle_outline),

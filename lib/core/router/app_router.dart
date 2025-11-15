@@ -8,9 +8,9 @@ import '../../features/home/view/home_page.dart';
 import '../../features/my_posts/view/my_posts.dart';
 import '../../features/profile/view/profile_page.dart';
 import '../../features/search/view/search_page.dart';
-import '../../features/explore/view/explore_page.dart';
 import '../../features/upload/view/upload_page.dart';
 import '../../features/splash/view/splash_page.dart';
+import '../../features/notifications/view/notifications_page.dart';
 import '../../shared/widgets/main_scaffold.dart';
 import '../../features/profile/view/edit_profile.dart';
 
@@ -76,10 +76,10 @@ GoRouter buildRouter(AuthCubit authCubit) {
         ),
       ),
       GoRoute(
-        path: '/explore',
+        path: '/search',
         builder: (context, state) => MainScaffold(
-          currentPath: '/explore',
-          child: const ExplorePage(),
+          currentPath: '/search',
+          child: const SearchPage(),
         ),
       ),
       GoRoute(
@@ -99,12 +99,8 @@ GoRouter buildRouter(AuthCubit authCubit) {
       
       // Standalone pages without bottom navigation
       GoRoute(
-        path: '/search',
-        builder: (_, __) => const SearchPage(),
-      ),
-      GoRoute(
         path: '/notifications',
-        builder: (_, __) => const HomePage(), // TODO: Create this page
+        builder: (_, __) => const NotificationsPage(),
       ),
       GoRoute(
         path: '/edit-profile',

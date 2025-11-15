@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/postWidget.dart';
 import '../controller/search_controller.dart' as search_ctrl;
 
@@ -27,7 +26,7 @@ class _SearchPageState extends State<SearchPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_disposed && mounted) {
         _searchController.loadRecentPosts();
-        _focusNode.requestFocus(); // Auto-focus search bar
+        // Don't auto-focus since this is now a bottom tab page
       }
     });
   }
@@ -35,7 +34,6 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void dispose() {
     _disposed = true;
-    _searchController.clearSearch();
     _searchController.dispose();
     _textController.dispose();
     _focusNode.dispose();
@@ -44,50 +42,26 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false, // We handle the pop ourselves
-      onPopInvokedWithResult: (bool didPop, dynamic result) async {
-        if (didPop) return;
-        
-        // Handle back gesture - same logic as back button
-        if (!_disposed) {
-          _searchController.clearSearch();
-        }
-        
-        // Navigate back to home
-        context.go('/home');
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              // Clean up search state
-              if (!_disposed) {
-                _searchController.clearSearch();
-              }
-              
-              // Use GoRouter navigation
-              context.go('/home');
-            },
-          ),
-          title: SizedBox(
-            height: 40,
-            child: _buildSearchBar(),
-          ),
-          actions: [
-            AnimatedBuilder(
-              animation: _searchController,
-              builder: (context, child) {
-                return _searchController.currentQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _textController.clear();
-                          _searchController.clearSearch();
-                        },
-                      )
-                    : const SizedBox.shrink();
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false, // Remove back button
+        title: SizedBox(
+          height: 40,
+          child: _buildSearchBar(),
+        ),
+        actions: [
+          AnimatedBuilder(
+            animation: _searchController,
+            builder: (context, child) {
+              return _searchController.currentQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _textController.clear();
+                        _searchController.clearSearch();
+                      },
+                    )
+                  : const SizedBox.shrink();
               },
             ),
           ],
@@ -98,7 +72,6 @@ class _SearchPageState extends State<SearchPage> {
           if (_disposed || !mounted) return const SizedBox.shrink();
           return _buildBody();
         },
-      ),
       ),
     );
   }

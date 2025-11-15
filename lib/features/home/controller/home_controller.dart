@@ -1,21 +1,34 @@
 import 'package:flutter/material.dart';
 import '../../../core/di/service_locator.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../data/models/post.dart';
 import '../../../data/repositories/post_repository.dart';
+import '../../../data/repositories/notification_repository.dart';
+import 'dart:async';
 
 class HomeController extends ChangeNotifier {
   final IPostRepository _postRepository = ServiceLocator().postRepository;
+  final INotificationRepository _notificationRepository = ServiceLocator().notificationRepository;
   
   List<Post> _posts = [];
   bool _isLoading = false;
   String? _error;
   int _currentPage = 1;
   bool _hasMore = true;
+  int _unreadNotificationCount = 0;
+  late StreamSubscription _notificationSubscription;
+
+  HomeController() {
+    _notificationSubscription = NotificationService().notificationUpdates.listen((_) {
+      refreshNotificationCount();
+    });
+  }
 
   List<Post> get posts => _posts;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get hasMore => _hasMore;
+  int get unreadNotificationCount => _unreadNotificationCount;
 
   Future<void> fetchPosts({bool refresh = false}) async {
     if (_isLoading) return;
@@ -32,11 +45,14 @@ class HomeController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final newPosts = await _postRepository.getPosts(
-        page: _currentPage,
-        limit: 20,
-      );
-
+      // Fetch both posts and notification count concurrently
+      final results = await Future.wait([
+        _postRepository.getPosts(page: _currentPage, limit: 20),
+        _fetchUnreadNotificationCount(),
+      ]);
+      
+      final newPosts = results[0] as List<Post>;
+      
       if (refresh) {
         _posts = newPosts;
       } else {
@@ -117,5 +133,26 @@ class HomeController extends ChangeNotifier {
       // Could show error message here
       print('Error toggling like: $e');
     }
+  }
+
+  Future<void> _fetchUnreadNotificationCount() async {
+    try {
+      final count = await _notificationRepository.getUnreadCount();
+      _unreadNotificationCount = count;
+    } catch (e) {
+      // Silently fail for notification count - don't show error for this
+      _unreadNotificationCount = 0;
+    }
+  }
+
+  Future<void> refreshNotificationCount() async {
+    await _fetchUnreadNotificationCount();
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription.cancel();
+    super.dispose();
   }
 }
