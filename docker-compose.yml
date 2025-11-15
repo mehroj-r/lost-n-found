@@ -15,7 +15,7 @@ services:
     container_name: findly-dev-web
     entrypoint: /app/scripts/entrypoint.sh
     volumes:
-      - ./cdn:/cdn:z
+      - ./cdn:/app/cdn:z
     ports:
       - "127.0.0.1:${APP_PORT}:8000"
     depends_on:
