@@ -16,7 +16,7 @@ class ApiNotificationRepository implements INotificationRepository {
   @override
   Future<List<NotificationModel>> getNotifications() async {
     try {
-      final response = await _dio.get('/notifications');
+      final response = await _dio.get('/notifications/');
       
       if (response.statusCode == 200) {
         final data = response.data;
