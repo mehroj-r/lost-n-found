@@ -28,7 +28,7 @@ RUN groupadd --system --gid 999 nonroot \
 WORKDIR /app
 
 COPY --from=builder --chown=nonroot:nonroot /app /app
-COPY --chown=nonroot:nonroot ./src /app
+COPY --chown=775 ./src /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
