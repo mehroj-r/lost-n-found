@@ -29,6 +29,11 @@ class ApiConfig {
   static const String users = '/users/';
   static const String userDetail = '/users/'; // + {id}/
   
+  // Chat Endpoints
+  static const String chatCreate = '/posts/'; // + {post_id}/message/
+  static const String chatMessages = '/chats/'; // + {chat_id}/messages/
+  static const String chatSendMessage = '/chats/'; // + {chat_id}/messages/
+  
   // Environment
   static bool get isDevelopment => const bool.fromEnvironment('dart.vm.product') == false;
   static bool get isProduction => const bool.fromEnvironment('dart.vm.product');

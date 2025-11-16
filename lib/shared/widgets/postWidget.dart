@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../data/models/post.dart';
 
@@ -952,7 +953,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
   Widget _buildCompactMessageButton() {
     return GestureDetector(
       onTap: () {
-        // TODO: Implement messaging
+        context.go('/chat', extra: {'postId': widget.post.id});
       },
       child: Container(
         padding: const EdgeInsets.all(8),

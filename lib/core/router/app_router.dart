@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lost_n_found/features/auth/view/register_page.dart';
 import '../../features/auth/cubit/auth_cubit.dart';
@@ -11,6 +12,7 @@ import '../../features/search/view/search_page.dart';
 import '../../features/upload/view/upload_page.dart';
 import '../../features/splash/view/splash_page.dart';
 import '../../features/notifications/view/notifications_page.dart';
+import '../../features/chat/chat_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
 import '../../features/profile/view/edit_profile.dart';
 
@@ -115,6 +117,24 @@ GoRouter buildRouter(AuthCubit authCubit) {
           currentPath: '/profile',
           child: const MyPostsScreen(),
         ),
+      ),
+      GoRoute(
+        path: '/chat',
+        builder: (context, state) {
+          final args = state.extra as Map<String, dynamic>?;
+          final postId = args?['postId'] as int?;
+          
+          if (postId == null) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(
+                child: Text('Invalid chat parameters'),
+              ),
+            );
+          }
+          
+          return ChatScreen(postId: postId);
+        },
       ),
     ],
   );

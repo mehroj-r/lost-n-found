@@ -6,6 +6,7 @@ import '../../data/repositories/post_repository.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../data/repositories/file_repository.dart';
 import '../../data/repositories/notification_repository.dart';
+import '../../data/repositories/chat_repository.dart';
 import '../config/api_config.dart';
 import '../network/dio_client.dart';
 import '../network/network_info.dart';
@@ -24,6 +25,7 @@ class ServiceLocator {
   late final IUserRepository _userRepository;
   late final IFileRepository _fileRepository;
   late final INotificationRepository _notificationRepository;
+  late final ChatRepository _chatRepository;
 
   bool _isInitialized = false;
 
@@ -63,6 +65,7 @@ class ServiceLocator {
       _userRepository = UserRepository(dioClient: _dioClient);
       _fileRepository = FileRepository(dioClient: _dioClient);
       _notificationRepository = ApiNotificationRepository(_dioClient.dio);
+      _chatRepository = ApiChatRepository(_dioClient);
 
       _isInitialized = true;
     } catch (e) {
@@ -129,6 +132,11 @@ class ServiceLocator {
   INotificationRepository get notificationRepository {
     _ensureInitialized();
     return _notificationRepository;
+  }
+
+  ChatRepository get chatRepository {
+    _ensureInitialized();
+    return _chatRepository;
   }
 
   void _ensureInitialized() {
