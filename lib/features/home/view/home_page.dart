@@ -57,121 +57,55 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         actions: [
-          // Modern notification bell with badge
+          // Notification bell with unread count indicator
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: Stack(
-              clipBehavior: Clip.none,
               children: [
-                // Notification bell button
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      width: 1,
-                    ),
-                  ),
-                  child: IconButton(
-                    onPressed: () {
-                      context.go('/notifications');
-                    },
-                    icon: Icon(
-                      Icons.notifications_outlined,
-                      color: Theme.of(context).primaryColor,
-                      size: 26,
-                    ),
-                    padding: EdgeInsets.zero,
+                IconButton(
+                  onPressed: () {
+                    context.go('/notifications');
+                  },
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    size: 28,
                   ),
                 ),
-                
-                // Notification counter badge
-                if (_controller.unreadNotificationCount > 0)
-                  Positioned(
-                    right: -2,
-                    top: -2,
-                    child: Container(
-                      constraints: const BoxConstraints(
-                        minWidth: 22,
-                        minHeight: 22,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFF4444),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
+                // Only show badge if there are unread notifications
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    final count = _controller.unreadNotificationCount;
+                    if (count <= 0) return const SizedBox.shrink();
+                    
+                    return Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFF4444).withValues(alpha: 0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            count > 99 ? '99+' : count.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                        ],
-                      ),
-                      child: Text(
-                        _controller.unreadNotificationCount > 99 
-                            ? '99+' 
-                            : _controller.unreadNotificationCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          height: 1.0,
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                    ),
-                  ),
-                // Debug: Always show a test badge to verify positioning
-                if (true)
-                  Positioned(
-                    right: -2,
-                    top: -2,
-                    child: Container(
-                      constraints: const BoxConstraints(
-                        minWidth: 22,
-                        minHeight: 22,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFF4444),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFF4444).withValues(alpha: 0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Text(
-                        '1',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          height: 1.0,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
