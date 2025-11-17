@@ -35,6 +35,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && chmod +x /app/scripts/*.sh \
     && mkdir -p /app/cdn/static /app/cdn/media \
-    && chown -R u+rwX,g+rwX /app/cdn
+    && chown -R nonroot:nonroot /app/cdn \
+    && chmod -R 775 /app/cdn
 
 USER nonroot
