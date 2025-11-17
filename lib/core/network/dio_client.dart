@@ -15,6 +15,7 @@ class DioClient {
     required this.networkInfo,
     required FlutterSecureStorage secureStorage,
     Function(String refreshToken)? onTokenRefresh,
+    Function()? onUnauthorized, // New callback for logout
     int connectTimeout = 30000,
     int receiveTimeout = 30000,
     int sendTimeout = 30000,
@@ -33,6 +34,7 @@ class DioClient {
       ApiInterceptor(
         secureStorage: secureStorage,
         onTokenRefresh: onTokenRefresh,
+        onUnauthorized: onUnauthorized, // Pass logout callback
       ),
       // Retry interceptor for failed requests
       RetryInterceptor(

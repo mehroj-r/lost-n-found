@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/router/navigation_history.dart';
 
 class MainScaffold extends StatefulWidget {
   final Widget child;
@@ -86,15 +87,26 @@ class _MainScaffoldState extends State<MainScaffold>
 
   @override
   Widget build(BuildContext context) {
+    final navigationHistory = NavigationHistory();
+    
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, dynamic result) async {
         if (didPop) return;
 
-        if (widget.currentPath == '/home') {
-          return;
-        } else {
+        // Get appropriate back destination
+        final backDestination = navigationHistory.getBackDestination();
+        
+        if (backDestination != null && backDestination != widget.currentPath) {
+          // Go back to previous page
+          navigationHistory.pop();
+          context.go(backDestination);
+        } else if (widget.currentPath != '/home') {
+          // Default fallback to home
           context.go('/home');
+        } else {
+          // On home page, allow app exit
+          return;
         }
       },
       child: Scaffold(
@@ -125,10 +137,10 @@ class _ModernBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.all(16),
-      height: 70,
+      height: 60, // Reduced from 70 since no text
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(25), // Reduced from 35 to 25
+        borderRadius: BorderRadius.circular(20), // Slightly reduced from 25
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -148,7 +160,6 @@ class _ModernBottomNavigationBar extends StatelessWidget {
           _NavItem(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
-            label: 'Home',
             index: 0,
             selectedIndex: selectedIndex,
             onTap: onItemTapped,
@@ -157,7 +168,6 @@ class _ModernBottomNavigationBar extends StatelessWidget {
           _NavItem(
             icon: Icons.search_outlined,
             activeIcon: Icons.search_rounded,
-            label: 'Search',
             index: 1,
             selectedIndex: selectedIndex,
             onTap: onItemTapped,
@@ -173,7 +183,6 @@ class _ModernBottomNavigationBar extends StatelessWidget {
           _NavItem(
             icon: Icons.chat_outlined,
             activeIcon: Icons.chat_rounded,
-            label: 'Chats',
             index: 3,
             selectedIndex: selectedIndex,
             onTap: onItemTapped,
@@ -182,7 +191,6 @@ class _ModernBottomNavigationBar extends StatelessWidget {
           _NavItem(
             icon: Icons.person_outline_rounded,
             activeIcon: Icons.person_rounded,
-            label: 'Profile',
             index: 4,
             selectedIndex: selectedIndex,
             onTap: onItemTapped,
@@ -197,7 +205,6 @@ class _ModernBottomNavigationBar extends StatelessWidget {
 class _NavItem extends StatefulWidget {
   final IconData icon;
   final IconData activeIcon;
-  final String label;
   final int index;
   final int selectedIndex;
   final Function(int) onTap;
@@ -206,7 +213,6 @@ class _NavItem extends StatefulWidget {
   const _NavItem({
     required this.icon,
     required this.activeIcon,
-    required this.label,
     required this.index,
     required this.selectedIndex,
     required this.onTap,
@@ -273,37 +279,23 @@ class _NavItemState extends State<_NavItem>
           return Transform.scale(
             scale: isSelected ? widget.scaleAnimation.value : 1.0,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isSelected
                     ? const Color(0xFF4F46E5).withValues(alpha: 0.1)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(25), // Now matches navbar
+                borderRadius: BorderRadius.circular(16),
               ),
               child: AnimatedBuilder(
                 animation: _controller,
                 builder: (context, child) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Transform.scale(
-                        scale: _scaleAnim.value,
-                        child: Icon(
-                          isSelected ? widget.activeIcon : widget.icon,
-                          color: _colorAnim.value,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.label,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                          color: _colorAnim.value,
-                        ),
-                      ),
-                    ],
+                  return Transform.scale(
+                    scale: _scaleAnim.value,
+                    child: Icon(
+                      isSelected ? widget.activeIcon : widget.icon,
+                      color: _colorAnim.value,
+                      size: 26,
+                    ),
                   );
                 },
               ),

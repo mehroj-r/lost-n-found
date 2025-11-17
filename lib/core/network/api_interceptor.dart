@@ -4,10 +4,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class ApiInterceptor extends Interceptor {
   final FlutterSecureStorage secureStorage;
   final Function(String refreshToken)? onTokenRefresh;
+  final Function()? onUnauthorized; // New callback for logout
 
   ApiInterceptor({
     required this.secureStorage,
     this.onTokenRefresh,
+    this.onUnauthorized,
   });
 
   @override
@@ -37,8 +39,16 @@ class ApiInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final statusCode = err.response?.statusCode;
+    
+    // Handle 403 Forbidden - immediate logout
+    if (statusCode == 403) {
+      await _handleUnauthorizedAccess();
+      return handler.reject(err);
+    }
+    
     // Handle 401 Unauthorized - try to refresh token
-    if (err.response?.statusCode == 401) {
+    if (statusCode == 401) {
       final refreshToken = await secureStorage.read(key: 'refresh_token');
       
       if (refreshToken != null && onTokenRefresh != null) {
@@ -48,16 +58,21 @@ class ApiInterceptor extends Interceptor {
 
           // Retry the original request with new token
           final accessToken = await secureStorage.read(key: 'access_token');
-          err.requestOptions.headers['Authorization'] = 'Bearer $accessToken';
+          if (accessToken != null) {
+            err.requestOptions.headers['Authorization'] = 'Bearer $accessToken';
 
-          final response = await Dio().fetch(err.requestOptions);
-          return handler.resolve(response);
+            final response = await Dio().fetch(err.requestOptions);
+            return handler.resolve(response);
+          }
         } catch (e) {
-          // Token refresh failed, clear tokens
-          await secureStorage.delete(key: 'access_token');
-          await secureStorage.delete(key: 'refresh_token');
+          // Token refresh failed, logout user
+          await _handleUnauthorizedAccess();
           return handler.reject(err);
         }
+      } else {
+        // No refresh token available, logout user
+        await _handleUnauthorizedAccess();
+        return handler.reject(err);
       }
     }
 
@@ -68,5 +83,14 @@ class ApiInterceptor extends Interceptor {
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     // Handle successful responses
     super.onResponse(response, handler);
+  }
+
+  Future<void> _handleUnauthorizedAccess() async {
+    // Clear tokens
+    await secureStorage.delete(key: 'access_token');
+    await secureStorage.delete(key: 'refresh_token');
+    
+    // Trigger logout callback
+    onUnauthorized?.call();
   }
 }

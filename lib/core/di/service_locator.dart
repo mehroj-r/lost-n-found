@@ -26,6 +26,7 @@ class ServiceLocator {
   late final IFileRepository _fileRepository;
   late final INotificationRepository _notificationRepository;
   late final ChatRepository _chatRepository;
+  Function()? _onUnauthorized; // Store logout callback
 
   bool _isInitialized = false;
 
@@ -50,6 +51,7 @@ class ServiceLocator {
         networkInfo: _networkInfo,
         secureStorage: _secureStorage,
         onTokenRefresh: _refreshToken,
+        onUnauthorized: () => _onUnauthorized?.call(), // Use stored callback
         connectTimeout: ApiConfig.connectTimeout,
         receiveTimeout: ApiConfig.receiveTimeout,
         sendTimeout: ApiConfig.sendTimeout,
@@ -137,6 +139,11 @@ class ServiceLocator {
   ChatRepository get chatRepository {
     _ensureInitialized();
     return _chatRepository;
+  }
+
+  // Method to set logout callback from AuthCubit
+  void setUnauthorizedCallback(Function() callback) {
+    _onUnauthorized = callback;
   }
 
   void _ensureInitialized() {

@@ -15,8 +15,12 @@ import '../../features/chat/chat_screen.dart';
 import '../../features/chat_list/chat_list_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
 import '../../features/profile/view/edit_profile.dart';
+import 'page_transitions.dart';
+import 'navigation_history.dart';
 
 GoRouter buildRouter(AuthCubit authCubit) {
+  final navigationHistory = NavigationHistory();
+
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(authCubit.stream),
@@ -25,18 +29,22 @@ GoRouter buildRouter(AuthCubit authCubit) {
       final loggedIn = authCubit.state.user != null;
       final currentLocation = state.matchedLocation;
       
+      // Track navigation for history
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        navigationHistory.push(currentLocation);
+      });
+
       // Show splash screen while initializing
       if (isInitializing && currentLocation != '/splash') {
         return '/splash';
       }
-      
-      // After initialization, handle auth-based redirects
-      if (!isInitializing) {
-        final isLoginPage = currentLocation == '/login';
-        final isRegisterPage = currentLocation == '/register';
-        final isSplashPage = currentLocation == '/splash';
 
-        // If on splash page and initialization is done, redirect based on auth state
+      final isSplashPage = currentLocation == '/splash';
+      final isLoginPage = currentLocation == '/login';
+      final isRegisterPage = currentLocation == '/register';
+
+      // After initialization, redirect appropriately
+      if (!isInitializing) {
         if (isSplashPage) {
           return loggedIn ? '/home' : '/login';
         }
@@ -58,94 +66,166 @@ GoRouter buildRouter(AuthCubit authCubit) {
     routes: [
       GoRoute(
         path: '/splash',
-        builder: (_, __) => const SplashPage(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          const SplashPage(),
+          state: state,
+        ),
       ),
       GoRoute(
         path: '/login',
-        builder: (_, __) => const LoginPage(),
+        pageBuilder: (context, state) => PageTransitions.slideFromRight(
+          const LoginPage(),
+          state: state,
+        ),
       ),
       GoRoute(
         path: '/register',
-        builder: (_, __) => const RegisterPage(),
+        pageBuilder: (context, state) => PageTransitions.slideFromRight(
+          const RegisterPage(),
+          state: state,
+        ),
       ),
       
-      // Bottom navigation routes wrapped in MainScaffold
+      // Bottom navigation routes with proper transitions
       GoRoute(
         path: '/home',
-        builder: (context, state) => MainScaffold(
-          currentPath: '/home',
+        pageBuilder: (context, state) => _buildNavbarPage(
+          context: context,
+          state: state,
           child: const HomePage(),
+          currentPath: '/home',
+          navigationHistory: navigationHistory,
         ),
       ),
       GoRoute(
         path: '/search',
-        builder: (context, state) => MainScaffold(
-          currentPath: '/search',
+        pageBuilder: (context, state) => _buildNavbarPage(
+          context: context,
+          state: state,
           child: const SearchPage(),
+          currentPath: '/search',
+          navigationHistory: navigationHistory,
         ),
       ),
       GoRoute(
         path: '/upload',
-        builder: (context, state) => MainScaffold(
-          currentPath: '/upload',
+        pageBuilder: (context, state) => _buildNavbarPage(
+          context: context,
+          state: state,
           child: const UploadPage(),
-        ),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => MainScaffold(
-          currentPath: '/profile',
-          child: ProfilePage(),
-        ),
-      ),
-      
-      // Standalone pages without bottom navigation
-      GoRoute(
-        path: '/notifications',
-        builder: (_, __) => const NotificationsPage(),
-      ),
-      GoRoute(
-        path: '/edit-profile',
-        builder: (context, state) => MainScaffold(
-          currentPath: '/profile',
-          child: const EditProfilePage(),
-        ),
-      ),
-      GoRoute(
-        path: '/my-posts',
-        builder: (context, state) => MainScaffold(
-          currentPath: '/profile',
-          child: const MyPostsScreen(),
+          currentPath: '/upload',
+          navigationHistory: navigationHistory,
         ),
       ),
       GoRoute(
         path: '/chat-list',
-        builder: (context, state) => MainScaffold(
-          currentPath: '/chat-list',
+        pageBuilder: (context, state) => _buildNavbarPage(
+          context: context,
+          state: state,
           child: const ChatListScreen(),
+          currentPath: '/chat-list',
+          navigationHistory: navigationHistory,
+        ),
+      ),
+      GoRoute(
+        path: '/profile',
+        pageBuilder: (context, state) => _buildNavbarPage(
+          context: context,
+          state: state,
+          child: ProfilePage(),
+          currentPath: '/profile',
+          navigationHistory: navigationHistory,
+        ),
+      ),
+      
+      // Detail pages with slide animations
+      GoRoute(
+        path: '/notifications',
+        pageBuilder: (context, state) => PageTransitions.slideFromBottom(
+          const NotificationsPage(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/edit-profile',
+        pageBuilder: (context, state) => PageTransitions.slideFromRight(
+          MainScaffold(
+            currentPath: '/profile',
+            child: const EditProfilePage(),
+          ),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/my-posts',
+        pageBuilder: (context, state) => PageTransitions.slideFromRight(
+          MainScaffold(
+            currentPath: '/profile',
+            child: const MyPostsScreen(),
+          ),
+          state: state,
         ),
       ),
       GoRoute(
         path: '/chat',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final args = state.extra as Map<String, dynamic>?;
           final postId = args?['postId'] as int?;
           final chatId = args?['chatId'] as String?;
           
           if (postId == null && chatId == null) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Error')),
-              body: const Center(
-                child: Text('Invalid chat parameters'),
+            return PageTransitions.slideFromRight(
+              Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: const Center(
+                  child: Text('Invalid chat parameters'),
+                ),
               ),
+              state: state,
             );
           }
           
-          return ChatScreen(postId: postId, chatId: chatId);
+          return PageTransitions.slideFromRight(
+            ChatScreen(postId: postId, chatId: chatId),
+            state: state,
+          );
         },
       ),
     ],
   );
+}
+
+/// Helper function to build navbar pages with appropriate transitions
+Page _buildNavbarPage({
+  required BuildContext context,
+  required GoRouterState state,
+  required Widget child,
+  required String currentPath,
+  required NavigationHistory navigationHistory,
+}) {
+  final previousPath = navigationHistory.previousPath;
+  final navigationType = previousPath != null 
+    ? navigationHistory.getNavigationType(previousPath, currentPath)
+    : NavigationType.navbar;
+
+  final wrappedChild = MainScaffold(
+    currentPath: currentPath,
+    child: child,
+  );
+
+  switch (navigationType) {
+    case NavigationType.back:
+      return PageTransitions.slideFromLeft(wrappedChild, state: state);
+    case NavigationType.forward:
+      return PageTransitions.slideFromRight(wrappedChild, state: state);
+    case NavigationType.navbar:
+    case NavigationType.modal:
+      return PageTransitions.fade(
+        wrappedChild, 
+        state: state,
+        duration: const Duration(milliseconds: 200),
+      );
+  }
 }
 
 class GoRouterRefreshStream extends ChangeNotifier {

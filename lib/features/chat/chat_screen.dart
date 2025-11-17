@@ -165,8 +165,8 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
       child: Row(
         children: [
           IconButton(
-            onPressed: () => context.go('/home'),
-            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back_ios_rounded),
           ),
           Container(
             width: 40,

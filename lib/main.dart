@@ -48,6 +48,12 @@ class _FindlyBootstrapState extends State<FindlyBootstrap> {
       _authCubit = AuthCubit(ServiceLocator().authRepository);
       _router = buildRouter(_authCubit);
       
+      // Register logout callback for unauthorized responses
+      ServiceLocator().setUnauthorizedCallback(() async {
+        await _authCubit.logout();
+        _router.go('/login');
+      });
+      
       // Check authentication status with timeout
       await _authCubit.checkAuthStatus().timeout(
         const Duration(seconds: 5),
