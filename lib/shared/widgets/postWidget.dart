@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/models/post.dart';
+import '../../features/auth/cubit/auth_cubit.dart';
 
 class PostWidget extends StatefulWidget {
   final Post post;
@@ -951,6 +953,15 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
   }
 
   Widget _buildCompactMessageButton() {
+    // Get current user from AuthCubit
+    final authState = context.read<AuthCubit>().state;
+    final currentUserId = authState.user?.id;
+    
+    // Don't show message button for own posts or if not authenticated
+    if (currentUserId == null || widget.post.author.id == currentUserId) {
+      return const SizedBox.shrink();
+    }
+    
     return GestureDetector(
       onTap: () {
         context.go('/chat', extra: {'postId': widget.post.id});

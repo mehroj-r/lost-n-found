@@ -43,7 +43,7 @@ class NotificationController extends ChangeNotifier {
         notifyListeners();
         
         // Notify the notification service about the update
-        NotificationService().notifyUpdate();
+        NotificationService().notifyNotificationUpdate();
       }
     } catch (e) {
       _error = 'Failed to mark notification as read: $e';
@@ -60,7 +60,7 @@ class NotificationController extends ChangeNotifier {
       notifyListeners();
       
       // Notify the notification service about the update
-      NotificationService().notifyUpdate();
+      NotificationService().notifyNotificationUpdate();
     } catch (e) {
       _error = 'Failed to mark all notifications as read: $e';
       notifyListeners();

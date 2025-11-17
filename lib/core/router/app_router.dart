@@ -120,7 +120,10 @@ GoRouter buildRouter(AuthCubit authCubit) {
       ),
       GoRoute(
         path: '/chat-list',
-        builder: (context, state) => const ChatListScreen(),
+        builder: (context, state) => MainScaffold(
+          currentPath: '/chat-list',
+          child: const ChatListScreen(),
+        ),
       ),
       GoRoute(
         path: '/chat',

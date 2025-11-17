@@ -34,7 +34,13 @@ class ChatCubit extends Cubit<ChatState> {
       _startMessageUpdates(chatDetails.chat.id);
       
     } catch (e) {
-      emit(ChatError(e.toString()));
+      // Handle specific error for self-messaging
+      final errorMessage = e.toString();
+      if (errorMessage.contains('Cannot create chat with yourself')) {
+        emit(ChatError('You cannot message your own posts'));
+      } else {
+        emit(ChatError(errorMessage));
+      }
     }
   }
 

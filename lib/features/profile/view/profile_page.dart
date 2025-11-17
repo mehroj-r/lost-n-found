@@ -176,13 +176,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                       ),
                       _menuItem(
-                        icon: Icons.chat_outlined,
-                        title: 'Chats',
-                        onTap: () {
-                          context.go('/chat-list');
-                        },
-                      ),
-                      _menuItem(
                         icon: Icons.bookmark_added_outlined,
                         title: 'My claimed items',
                         onTap: () {
