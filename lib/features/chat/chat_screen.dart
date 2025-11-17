@@ -1,38 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/di/service_locator.dart';
 import '../../data/models/message.dart';
 import '../../data/models/chat_details.dart';
 import 'cubit/chat_cubit.dart';
 
-class ChatScreen extends StatefulWidget {
-  final int postId;
+class ChatScreen extends StatelessWidget {
+  final int? postId;
+  final String? chatId;
 
   const ChatScreen({
     super.key,
-    required this.postId,
-  });
+    this.postId,
+    this.chatId,
+  }) : assert(postId != null || chatId != null, 'Either postId or chatId must be provided');
 
-  @override
-  State<ChatScreen> createState() => _ChatScreenState();
-}
-
-class _ChatScreenState extends State<ChatScreen> {
-  // Remove these as they're managed in the content widget
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => ChatCubit(ServiceLocator().chatRepository),
-      child: _ChatScreenContent(postId: widget.postId),
+      child: _ChatScreenContent(postId: postId, chatId: chatId),
     );
   }
 }
 
 class _ChatScreenContent extends StatefulWidget {
-  final int postId;
+  final int? postId;
+  final String? chatId;
 
-  const _ChatScreenContent({required this.postId});
+  const _ChatScreenContent({this.postId, this.chatId});
 
   @override
   State<_ChatScreenContent> createState() => _ChatScreenContentState();
@@ -41,25 +39,33 @@ class _ChatScreenContent extends StatefulWidget {
 class _ChatScreenContentState extends State<_ChatScreenContent> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late ChatCubit _chatCubit;
 
   @override
   void initState() {
     super.initState();
-    context.read<ChatCubit>().openChat(widget.postId);
+    _chatCubit = context.read<ChatCubit>();
+    
+    // Open chat by postId or chatId
+    if (widget.postId != null) {
+      _chatCubit.openChat(widget.postId!);
+    } else if (widget.chatId != null) {
+      _chatCubit.openChatById(widget.chatId!);
+    }
   }
 
   @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    context.read<ChatCubit>().stopMessageUpdates();
+    _chatCubit.stopMessageUpdates();
     super.dispose();
   }
 
   void _sendMessage() {
     final content = _messageController.text.trim();
     if (content.isNotEmpty) {
-      context.read<ChatCubit>().sendMessage(content);
+      _chatCubit.sendMessage(content);
       _messageController.clear();
       _scrollToBottom();
     }
@@ -110,7 +116,13 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: () => context.read<ChatCubit>().openChat(widget.postId),
+                    onPressed: () {
+                      if (widget.postId != null) {
+                        _chatCubit.openChat(widget.postId!);
+                      } else if (widget.chatId != null) {
+                        _chatCubit.openChatById(widget.chatId!);
+                      }
+                    },
                     child: const Text('Retry'),
                   ),
                 ],
@@ -153,7 +165,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
       child: Row(
         children: [
           IconButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.go('/home'),
             icon: const Icon(Icons.arrow_back),
           ),
           Container(

@@ -38,6 +38,29 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  Future<void> openChatById(String chatId) async {
+    emit(ChatLoading());
+    
+    try {
+      // Get chat details
+      final chatDetails = await _chatRepository.getChatById(chatId);
+      
+      // Load messages
+      final messages = await _chatRepository.getMessages(chatDetails.chat.id);
+      
+      emit(ChatLoaded(
+        chatDetails: chatDetails,
+        messages: messages,
+      ));
+      
+      // Start periodic message updates
+      _startMessageUpdates(chatDetails.chat.id);
+      
+    } catch (e) {
+      emit(ChatError(e.toString()));
+    }
+  }
+
   Future<void> sendMessage(String content) async {
     if (state is! ChatLoaded) return;
     

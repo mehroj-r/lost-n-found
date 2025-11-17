@@ -2,11 +2,14 @@ import '../../core/network/dio_client.dart';
 import '../../core/config/api_config.dart';
 import '../models/chat_details.dart';
 import '../models/message.dart';
+import '../models/chat_list_item.dart';
 
 abstract class ChatRepository {
   Future<ChatDetails> createOrGetChat(int postId);
+  Future<ChatDetails> getChatById(String chatId);
   Future<List<Message>> getMessages(String chatId);
   Future<Message> sendMessage(String chatId, String content);
+  Future<List<ChatListItem>> getUserChats();
 }
 
 class ApiChatRepository implements ChatRepository {
@@ -27,6 +30,22 @@ class ApiChatRepository implements ChatRepository {
       throw Exception(data['message'] ?? 'Failed to create or get chat');
     } catch (e) {
       throw Exception('Failed to create or get chat: $e');
+    }
+  }
+
+  @override
+  Future<ChatDetails> getChatById(String chatId) async {
+    try {
+      final response = await _dioClient.get('${ApiConfig.chatGet}$chatId');
+      
+      final data = response.data;
+      if (data is Map && data['success'] == true && data.containsKey('data')) {
+        return ChatDetails.fromJson(data['data']);
+      }
+      
+      throw Exception(data['message'] ?? 'Failed to get chat');
+    } catch (e) {
+      throw Exception('Failed to get chat: $e');
     }
   }
 
@@ -67,6 +86,25 @@ class ApiChatRepository implements ChatRepository {
       throw Exception(data['message'] ?? 'Failed to send message');
     } catch (e) {
       throw Exception('Failed to send message: $e');
+    }
+  }
+
+  @override
+  Future<List<ChatListItem>> getUserChats() async {
+    try {
+      final response = await _dioClient.get(ApiConfig.chatsList);
+      
+      final data = response.data;
+      if (data is Map && data['success'] == true && data.containsKey('data')) {
+        final chatsList = data['data'] as List;
+        return chatsList
+            .map((json) => ChatListItem.fromJson(json))
+            .toList();
+      }
+      
+      throw Exception(data['message'] ?? 'Failed to get user chats');
+    } catch (e) {
+      throw Exception('Failed to get user chats: $e');
     }
   }
 }
