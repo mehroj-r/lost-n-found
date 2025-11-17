@@ -28,13 +28,13 @@ RUN groupadd --system --gid 999 nonroot \
 WORKDIR /app
 
 COPY --from=builder --chown=nonroot:nonroot /app /app
-COPY --chown=775 ./src /app
+COPY --chown=nonroot:nonroot ./src /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/* \
     && chmod +x /app/scripts/*.sh \
     && mkdir -p /app/cdn/static /app/cdn/media \
-    && chown -R 775 /app/cdn
+    && chown -R u+rwX,g+rwX /app/cdn
 
 USER nonroot
