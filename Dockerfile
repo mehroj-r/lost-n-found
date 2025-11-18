@@ -37,5 +37,3 @@ RUN apt-get update \
     && mkdir -p /app/cdn/static /app/cdn/media \
     && chown -R nonroot:nonroot /app/cdn \
     && chmod -R 775 /app/cdn
-
-USER nonroot
