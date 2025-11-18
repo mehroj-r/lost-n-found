@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from apps.core.models import TimestampedModel
@@ -10,6 +11,8 @@ class Post(TimestampedModel):
     type = models.CharField(max_length=100, choices=constants.PostType)
     author = models.ForeignKey(to="account.User", on_delete=models.CASCADE, related_name="posts")
     photo = models.ForeignKey(to="file.File", on_delete=models.SET_NULL, null=True, blank=True, related_name="posts")
+    tags = ArrayField(base_field=models.CharField(max_length=100), default=[])
+    location = models.CharField(max_length=255, blank=True, null=True)
     is_completed = models.BooleanField(default=False)
     like_count = models.PositiveIntegerField(default=0)
     likes = models.ManyToManyField(to="account.User", related_name="liked_posts", blank=True, through="PostLikes")
