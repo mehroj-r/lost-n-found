@@ -158,7 +158,7 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
     return RefreshIndicator(
       onRefresh: _controller.refresh,
       child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.only(bottom: 100), // Increased from 16 to 100 for navbar clearance
         itemCount: _controller.posts.length,
         itemBuilder: (context, index) {
           final post = _controller.posts[index];

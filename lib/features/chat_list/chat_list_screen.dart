@@ -108,7 +108,7 @@ class _ChatListContent extends StatelessWidget {
             return RefreshIndicator(
               onRefresh: () => context.read<ChatListCubit>().refreshChats(),
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 116), // Increased bottom padding for navbar
                 itemCount: state.chats.length,
                 itemBuilder: (context, index) {
                   final chat = state.chats[index];

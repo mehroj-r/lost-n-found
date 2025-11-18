@@ -212,6 +212,7 @@ class _SearchPageState extends State<SearchPage> {
         ),
         Expanded(
           child: ListView.builder(
+            padding: const EdgeInsets.only(bottom: 100), // Add bottom padding for navbar
             itemCount: _searchController.searchResults.length,
             itemBuilder: (context, index) {
               final post = _searchController.searchResults[index];
@@ -276,6 +277,7 @@ class _SearchPageState extends State<SearchPage> {
         ),
         Expanded(
           child: ListView.builder(
+            padding: const EdgeInsets.only(bottom: 100), // Add bottom padding for navbar
             itemCount: _searchController.recentPosts.length,
             itemBuilder: (context, index) {
               final post = _searchController.recentPosts[index];

@@ -167,6 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 Expanded(
                   child: ListView(
+                    padding: const EdgeInsets.only(bottom: 100), // Add bottom padding for navbar
                     children: [
                       _menuItem(
                         icon: Icons.list_alt_outlined,

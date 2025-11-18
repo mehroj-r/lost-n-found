@@ -212,7 +212,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     return RefreshIndicator(
       onRefresh: _refreshNotifications,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 116), // Increased bottom padding for navbar
         itemCount: notifications.length,
         itemBuilder: (context, index) {
           final notification = notifications[index];
