@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/router/navigation_history.dart';
 import '../../data/models/message.dart';
 import '../../data/models/chat_details.dart';
+import '../../features/auth/cubit/auth_cubit.dart';
 import 'cubit/chat_cubit.dart';
 
 class ChatScreen extends StatelessWidget {
@@ -98,11 +100,30 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
     }
   }
 
+  void _handleBackNavigation() {
+    final navigationHistory = NavigationHistory();
+    final backDestination = navigationHistory.getBackDestination();
+    
+    if (backDestination != null && backDestination != '/chat') {
+      navigationHistory.pop();
+      context.go(backDestination);
+    } else {
+      // Default fallback - go to chat list or home
+      context.go('/chat-list');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: BlocBuilder<ChatCubit, ChatState>(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) return;
+        _handleBackNavigation();
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: BlocBuilder<ChatCubit, ChatState>(
         builder: (context, state) {
           if (state is ChatLoading) {
             return const Center(
@@ -146,18 +167,20 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
           return const SizedBox.shrink();
         },
       ),
+      ),
     );
   }
 
   Widget _buildAppBar(ChatDetails chatDetails) {
-    // Find the other user (not the post author)
-    final currentUser = chatDetails.post.author;
-    final otherUser = chatDetails.users.isNotEmpty 
-        ? chatDetails.users.firstWhere(
-            (user) => user.id != currentUser.id,
-            orElse: () => currentUser,
-          )
-        : currentUser;
+    // Get the current authenticated user
+    final authState = context.read<AuthCubit>().state;
+    final currentUserId = authState.user?.id;
+    
+    // Find the other user (not the current authenticated user)
+    final otherUser = chatDetails.users.firstWhere(
+      (user) => user.id != currentUserId,
+      orElse: () => chatDetails.users.first, // Fallback to first user
+    );
 
     return Container(
       padding: EdgeInsets.fromLTRB(8, MediaQuery.of(context).padding.top + 8, 16, 16),
@@ -165,7 +188,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
       child: Row(
         children: [
           IconButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => _handleBackNavigation(),
             icon: const Icon(Icons.arrow_back_ios_rounded),
           ),
           Container(
@@ -393,7 +416,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
     return ListView.builder(
       controller: _scrollController,
       reverse: true, // Show newest messages at bottom
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 8, 16), // Reduced right padding
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
@@ -413,8 +436,8 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
         children: [
           if (!isOutgoing) ...[
             Container(
-              width: 28,
-              height: 28,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Theme.of(context).primaryColor.withAlpha(51),
@@ -423,15 +446,15 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
                   ? ClipOval(
                       child: Image.network(
                         message.sender.avatar!.url,
-                        width: 28,
-                        height: 28,
+                        width: 34,
+                        height: 34,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Center(
                           child: Text(
                             message.sender.firstName[0].toUpperCase(),
                             style: TextStyle(
                               color: Theme.of(context).primaryColor,
-                              fontSize: 12,
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -443,7 +466,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
                         message.sender.firstName[0].toUpperCase(),
                         style: TextStyle(
                           color: Theme.of(context).primaryColor,
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -452,35 +475,42 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isOutgoing 
-                    ? Theme.of(context).primaryColor 
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(18).copyWith(
-                  bottomLeft: isOutgoing ? const Radius.circular(18) : const Radius.circular(4),
-                  bottomRight: isOutgoing ? const Radius.circular(4) : const Radius.circular(18),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(13),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
+            flex: 1,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75, // Max 75% of screen width
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message.content,
-                    style: TextStyle(
-                      color: isOutgoing ? Colors.white : Colors.black87,
-                      fontSize: 15,
-                      height: 1.4,
-                    ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isOutgoing 
+                      ? Theme.of(context).primaryColor 
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(18).copyWith(
+                    bottomLeft: isOutgoing ? const Radius.circular(18) : const Radius.circular(4),
+                    bottomRight: isOutgoing ? const Radius.circular(4) : const Radius.circular(18),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(13),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message.content,
+                      style: TextStyle(
+                        color: isOutgoing ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
+                    ),
                   const SizedBox(height: 4),
                   Text(
                     _getTimeAgo(message.createdAt),
@@ -495,8 +525,9 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
               ),
             ),
           ),
-          if (isOutgoing) const SizedBox(width: 36),
-          if (!isOutgoing) const SizedBox(width: 36),
+          ),
+          // Add space only on the left side for incoming messages
+          if (!isOutgoing) const SizedBox(width: 28),
         ],
       ),
     );
@@ -518,22 +549,28 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
       child: Row(
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxHeight: 120, // Limit maximum height of input field
               ),
-              child: TextField(
-                controller: _messageController,
-                decoration: const InputDecoration(
-                  hintText: 'Type a message...',
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  hintStyle: TextStyle(color: Colors.grey),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                maxLines: null,
-                textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (_) => _sendMessage(),
+                child: TextField(
+                  controller: _messageController,
+                  decoration: const InputDecoration(
+                    hintText: 'Type a message...',
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    hintStyle: TextStyle(color: Colors.grey),
+                  ),
+                  maxLines: 5,  // Limit to 5 lines maximum
+                  minLines: 1,  // Start with 1 line
+                  textCapitalization: TextCapitalization.sentences,
+                  onSubmitted: (_) => _sendMessage(),
+                ),
               ),
             ),
           ),
