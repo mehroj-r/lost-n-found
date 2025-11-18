@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/postWidget.dart';
 import '../controller/my_posts_controller.dart';
+import '../../auth/cubit/auth_cubit.dart';
 
 class MyPostsScreen extends StatefulWidget {
   const MyPostsScreen({super.key});
@@ -15,7 +18,8 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = MyPostsController();
+    final authCubit = context.read<AuthCubit>();
+    _controller = MyPostsController(authCubit: authCubit);
     
     // Load posts when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -162,15 +166,74 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
         itemCount: _controller.posts.length,
         itemBuilder: (context, index) {
           final post = _controller.posts[index];
-          return PostWidget(
-            post: post,
-            onTap: () {
-              // Navigate to post detail
-              print('Tapped on my post: ${post.title}');
-            },
-            onLikeToggle: (isLiked) {
-              _controller.toggleLike(post.id, isLiked);
-            },
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              children: [
+                PostWidget(
+                  post: post,
+                  onTap: () {
+                    // Navigate to post detail
+                    print('Tapped on my post: ${post.title}');
+                  },
+                  onLikeToggle: (isLiked) {
+                    _controller.toggleLike(post.id, isLiked);
+                  },
+                ),
+                // Edit button row
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {
+                          context.push('/edit-post', extra: {'postId': post.id});
+                        },
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: const Text('Edit'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton.icon(
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Post'),
+                              content: const Text('Are you sure you want to delete this post?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                  ),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true) {
+                            await _controller.deletePost(post.id);
+                          }
+                        },
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        label: const Text('Delete'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
