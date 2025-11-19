@@ -18,6 +18,10 @@ import '../../features/profile/view/edit_profile.dart';
 import 'page_transitions.dart';
 import 'navigation_history.dart';
 
+import 'package:lost_n_found/data/models/post.dart';
+import 'package:lost_n_found/features/posts/view/post_detail_page.dart';
+
+
 GoRouter buildRouter(AuthCubit authCubit) {
   final navigationHistory = NavigationHistory();
 
@@ -126,6 +130,13 @@ GoRouter buildRouter(AuthCubit authCubit) {
           currentPath: '/chat-list',
           navigationHistory: navigationHistory,
         ),
+      ),
+      GoRoute(
+        path: '/posts/:id',
+        builder: (context, state) {
+          final post = state.extra as Post;
+          return PostDetailPage(post: post);
+        },
       ),
       GoRoute(
         path: '/profile',

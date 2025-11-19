@@ -48,204 +48,31 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Findly',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        actions: [
-          // Notification bell with unread count indicator
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Stack(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    context.go('/notifications');
-                  },
-                  icon: const Icon(
-                    Icons.notifications_outlined,
-                    size: 28,
-                  ),
-                ),
-                // Only show badge if there are unread notifications
-                AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    final count = _controller.unreadNotificationCount;
-                    if (count <= 0) return const SizedBox.shrink();
-                    
-                    return Positioned(
-                      right: 6,
-                      top: 6,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        constraints: const BoxConstraints(
-                          minWidth: 18,
-                          minHeight: 18,
-                        ),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            count > 99 ? '99+' : count.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
+      appBar: CustomAppBar(
+          hasNotifications: true,
+          onNotificationTap: () {
+            context.go('/notifications');
+          },
+          onProfileTap: () {
+            context.go('/profile');
+          },
       ),
-      body: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          // Show loading indicator on first load
-          if (_controller.isLoading && _controller.posts.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          // Show error message if there's an error and no posts
-          if (_controller.error != null && _controller.posts.isEmpty) {
-            return RefreshIndicator(
-              onRefresh: _controller.refresh,
-              child: ListView(
-                padding: const EdgeInsets.only(bottom: 100), // Add bottom padding for navbar
-                children: [
-                  _buildBannersSection(),
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Failed to load posts',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _controller.error!,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[500],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () => _controller.refresh(),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Show empty state if no posts
-          if (_controller.posts.isEmpty) {
-            return RefreshIndicator(
-              onRefresh: _controller.refresh,
-              child: ListView(
-                padding: const EdgeInsets.only(bottom: 100), // Add bottom padding for navbar
-                children: [
-                  _buildBannersSection(),
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No posts found',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Be the first to post something!',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Show posts list
-          return RefreshIndicator(
-            onRefresh: _controller.refresh,
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.only(bottom: 100), // Increased from 16 to 100 for navbar clearance
-              itemCount: _controller.posts.length + (_controller.hasMore ? 1 : 0) + 1, // +1 for banner
-              itemBuilder: (context, index) {
-                // Show banners at the top
-                if (index == 0) {
-                  return _buildBannersSection();
-                }
-                
-                // Adjust index for posts
-                final postIndex = index - 1;
-                
-                // Show loading indicator at the bottom when loading more
-                if (postIndex >= _controller.posts.length) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
-
-                final post = _controller.posts[postIndex];
-                return PostWidget(
-                  post: post,
-                  onTap: () {
-                    // Navigate to detail page
-                    if (kDebugMode) {
-                      print('Tapped on post: ${post.title}');
-                    }
-                  },
-                  onLikeToggle: (isLiked) {
-                    _controller.toggleLike(post.id, isLiked);
-                  },
+      body: ListView.builder(
+        itemCount: posts.length,
+        itemBuilder: (context, index) {
+          return PostWidget(
+            post: posts[index],
+              onTap: () {
+                print('Post clicked: ${posts[index].id}');
+                context.go(
+                  '/posts/${posts[index].id}',
+                  extra: posts[index], // pass the whole Post object
                 );
               },
-            ),
+            onLikeToggle: (isLiked) {
+              // Handle like toggle
+              print('Post liked: $isLiked');
+            },
           );
         },
       ),
