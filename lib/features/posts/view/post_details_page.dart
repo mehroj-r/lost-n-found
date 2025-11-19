@@ -1,14 +1,121 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../data/models/post.dart';
+import 'package:go_router/go_router.dart';
 
-class PostDetailPage extends StatelessWidget {
-  final Post post;
+import '../../../core/constants/app_colors.dart';
+import '../../../core/di/service_locator.dart';
+import '../../../data/models/post.dart';
+import '../../../data/repositories/post_repository.dart';
+
+class PostDetailPage extends StatefulWidget {
+  final Post post; // initial post coming from list
 
   const PostDetailPage({
     Key? key,
     required this.post,
   }) : super(key: key);
+
+  @override
+  State<PostDetailPage> createState() => _PostDetailPageState();
+}
+
+class _PostDetailPageState extends State<PostDetailPage> {
+  late Post _post;
+  bool _loadingDetails = false;
+  bool _likeInProgress = false;
+
+  final IPostRepository _postRepository = getIt<IPostRepository>();
+
+  @override
+  void initState() {
+    super.initState();
+    _post = widget.post;
+    _loadPostDetails(); // refresh from /posts/{id}/
+  }
+
+  Future<void> _loadPostDetails() async {
+    setState(() => _loadingDetails = true);
+    try {
+      final fresh = await _postRepository.getPostById(_post.id.toString());
+      if (!mounted) return;
+      setState(() {
+        _post = fresh;
+        _loadingDetails = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingDetails = false);
+      // Optional: silent fail, we already have list data
+      // You can show a SnackBar if you want
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    if (_likeInProgress) return;
+
+    setState(() => _likeInProgress = true);
+    final currentlyLiked = _post.isLiked;
+
+    try {
+      if (currentlyLiked) {
+        await _postRepository.unlikePost(_post.id);
+        if (!mounted) return;
+        setState(() {
+          _post = _post.copyWith(
+            isLiked: false,
+            likeCount: (_post.likeCount - 1).clamp(0, 1 << 31),
+          );
+        });
+      } else {
+        await _postRepository.likePost(_post.id);
+        if (!mounted) return;
+        setState(() {
+          _post = _post.copyWith(
+            isLiked: true,
+            likeCount: _post.likeCount + 1,
+          );
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to ${currentlyLiked ? 'unlike' : 'like'} the post.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _likeInProgress = false);
+      }
+    }
+  }
+
+  void _openChat() {
+    context.push('/chat', extra: {
+      'postId': _post.id,
+    });
+  }
+
+  String? get _photoUrl {
+    final photo = _post.photo;
+    if (photo == null) return null;
+
+    // TODO: change `photo.url` to the actual field name from your Photo model
+    return photo.url;
+  }
+
+  String get _authorInitial {
+    // Adjust to your AppUser fields
+    if (_post.author.firstName.isNotEmpty) {
+      return _post.author.firstName[0].toUpperCase();
+    }
+    if (_post.author.username.isNotEmpty) {
+      return _post.author.username[0].toUpperCase();
+    }
+    return '?';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,16 +135,26 @@ class PostDetailPage extends StatelessWidget {
                 children: [
                   // Photo
                   Hero(
-                    tag: 'post-photo-${post.id}',
-                    child: Image.network(
-                      post.photo,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: Colors.grey[300],
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported_outlined),
-                      ),
-                    ),
+                    tag: 'post-photo-${_post.id}',
+                    child: _photoUrl != null
+                        ? Image.network(
+                            _photoUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.grey[300],
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.image_not_supported_outlined,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: Colors.grey[300],
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.image_not_supported_outlined,
+                            ),
+                          ),
                   ),
 
                   // Back button
@@ -71,9 +188,7 @@ class PostDetailPage extends StatelessWidget {
                         radius: 19,
                         backgroundColor: Colors.grey[300],
                         child: Text(
-                          post.author.isNotEmpty
-                              ? post.author[0].toUpperCase()
-                              : '?',
+                          _authorInitial,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
@@ -119,29 +234,43 @@ class PostDetailPage extends StatelessWidget {
               ),
               child: SafeArea(
                 top: false,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _titleRow(),
-                      const SizedBox(height: 12),
-                      _ratingRow(),
-                      const SizedBox(height: 16),
-                      const Divider(color: AppColors.divider, height: 32),
-                      _descriptionSection(),
-                      const SizedBox(height: 24),
-                      _sizeColorRow(),
-                      const SizedBox(height: 24),
-                      _categorySection(),
-                      const SizedBox(height: 24),
-                      const Divider(color: AppColors.divider, height: 32),
-                      const SizedBox(height: 8),
-                      _locationAndClaimRow(context),
-                      const SizedBox(height: 18),
-                      _homeIndicator(),
-                    ],
-                  ),
+                child: Stack(
+                  children: [
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _titleRow(),
+                          const SizedBox(height: 12),
+                          _ratingRow(),
+                          const SizedBox(height: 16),
+                          const Divider(color: AppColors.divider, height: 32),
+                          _descriptionSection(),
+                          const SizedBox(height: 24),
+                          _sizeColorRow(),
+                          const SizedBox(height: 24),
+                          _categorySection(),
+                          const SizedBox(height: 24),
+                          const Divider(color: AppColors.divider, height: 32),
+                          const SizedBox(height: 8),
+                          _locationAndMessageRow(context),
+                          const SizedBox(height: 18),
+                          _homeIndicator(),
+                        ],
+                      ),
+                    ),
+
+                    if (_loadingDetails)
+                      const Positioned.fill(
+                        child: IgnorePointer(
+                          ignoring: true,
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -158,7 +287,7 @@ class PostDetailPage extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            post.title,
+            _post.title,
             style: const TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w700,
@@ -166,13 +295,30 @@ class PostDetailPage extends StatelessWidget {
             ),
           ),
         ),
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(
-            Icons.favorite_border_rounded,
-            color: Colors.redAccent,
-          ),
-        )
+        Column(
+          children: [
+            IconButton(
+              onPressed: _likeInProgress ? null : _toggleLike,
+              icon: Icon(
+                _post.isLiked
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                color: Colors.redAccent,
+              ),
+            ),
+            if (_post.likeCount > 0)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '${_post.likeCount}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -180,7 +326,7 @@ class PostDetailPage extends StatelessWidget {
   Widget _ratingRow() {
     return Row(
       children: [
-        // Distance pill
+        // Distance pill (static for now, no distance in API)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
@@ -189,7 +335,8 @@ class PostDetailPage extends StatelessWidget {
           ),
           child: Row(
             children: const [
-              Icon(Icons.place_outlined, size: 14, color: AppColors.textMuted),
+              Icon(Icons.place_outlined,
+                  size: 14, color: AppColors.textMuted),
               SizedBox(width: 4),
               Text(
                 '67m away',
@@ -204,16 +351,14 @@ class PostDetailPage extends StatelessWidget {
         ),
         const SizedBox(width: 12),
 
-        // Stars
+        // Stars (purely decorative)
         Row(
           children: List.generate(5, (index) {
             final isFilled = index < 4; // 4.0/5 rating look
             return Padding(
               padding: const EdgeInsets.only(right: 2),
               child: Icon(
-                isFilled
-                    ? Icons.star_rounded
-                    : Icons.star_border_rounded,
+                isFilled ? Icons.star_rounded : Icons.star_border_rounded,
                 size: 18,
                 color: AppColors.ratingStar,
               ),
@@ -260,7 +405,7 @@ class PostDetailPage extends StatelessWidget {
           TextSpan(
             children: [
               TextSpan(
-                text: post.description,
+                text: _post.description,
                 style: const TextStyle(
                   fontSize: 14,
                   height: 1.4,
@@ -282,7 +427,7 @@ class PostDetailPage extends StatelessWidget {
     );
   }
 
-  // ---------- Size + Color ----------
+  // ---------- Size + Color (still mocked, no such fields in API) ----------
 
   Widget _sizeColorRow() {
     return Row(
@@ -350,7 +495,7 @@ class PostDetailPage extends StatelessWidget {
   // ---------- Categories ----------
 
   Widget _categorySection() {
-    final tags = post.tags;
+    final tags = _post.tags;
     final visibleTags = tags.take(3).toList();
     final remaining = tags.length - visibleTags.length;
 
@@ -396,9 +541,12 @@ class PostDetailPage extends StatelessWidget {
     );
   }
 
-  // ---------- Location + Claim button ----------
+  // ---------- Location + MESSAGE button ----------
 
-  Widget _locationAndClaimRow(BuildContext context) {
+  Widget _locationAndMessageRow(BuildContext context) {
+    final locationText =
+        _post.location.isNotEmpty ? _post.location : 'Not specified';
+
     return Row(
       children: [
         Expanded(
@@ -415,7 +563,7 @@ class PostDetailPage extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                post.location,
+                locationText,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -431,32 +579,30 @@ class PostDetailPage extends StatelessWidget {
             height: 54,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accentGreen,
+                backgroundColor: AppColors.primary, // purple
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
                 elevation: 0,
               ),
-              onPressed: () {
-                // TODO: implement claim action
-              },
+              onPressed: _openChat,
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 22,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 8),
                   Text(
-                    'CLAIM',
+                    'MESSAGE',
                     style: TextStyle(
                       letterSpacing: 0.5,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
-                  ),
-                  SizedBox(width: 8),
-                  Icon(
-                    Icons.check_rounded,
-                    size: 22,
-                    color: Colors.white,
                   ),
                 ],
               ),
@@ -510,9 +656,7 @@ class PostDetailPage extends StatelessWidget {
       width: isActive ? 8 : 7,
       height: isActive ? 8 : 7,
       decoration: BoxDecoration(
-        color: isActive
-            ? Colors.white
-            : Colors.white.withOpacity(0.5),
+        color: isActive ? Colors.white : Colors.white.withOpacity(0.5),
         shape: BoxShape.circle,
       ),
     );

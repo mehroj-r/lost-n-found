@@ -7,7 +7,7 @@ class Post {
   final String description;
   final Photo? photo;
   final List<String> tags;
-  final String type;  // 'lost', 'found'
+  final String type; // 'lost', 'found'
   final AppUser author;
   final String location;
   final int likeCount;
@@ -36,9 +36,7 @@ class Post {
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       photo: json['photo'] != null ? Photo.fromJson(json['photo']) : null,
-      tags: json['tags'] != null 
-          ? List<String>.from(json['tags'] as List)
-          : [],
+      tags: json['tags'] != null ? List<String>.from(json['tags'] as List) : [],
       type: json['type']?.toString() ?? 'lost',
       author: AppUser.fromJson(json['author'] ?? {}),
       location: json['location']?.toString() ?? '',
@@ -66,5 +64,35 @@ class Post {
       'is_completed': isCompleted,
       'created_at': createdAt.toIso8601String(),
     };
+  }
+
+  // NEW:
+  Post copyWith({
+    String? title,
+    String? description,
+    Photo? photo,
+    List<String>? tags,
+    String? type,
+    AppUser? author,
+    String? location,
+    int? likeCount,
+    bool? isLiked,
+    bool? isCompleted,
+    DateTime? createdAt,
+  }) {
+    return Post(
+      id: id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      photo: photo ?? this.photo,
+      tags: tags ?? this.tags,
+      type: type ?? this.type,
+      author: author ?? this.author,
+      location: location ?? this.location,
+      likeCount: likeCount ?? this.likeCount,
+      isLiked: isLiked ?? this.isLiked,
+      isCompleted: isCompleted ?? this.isCompleted,
+      createdAt: createdAt ?? this.createdAt,
+    );
   }
 }
