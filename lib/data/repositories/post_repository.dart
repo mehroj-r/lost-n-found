@@ -3,17 +3,18 @@ import '../../core/config/api_config.dart';
 import '../models/post.dart';
 
 abstract class IPostRepository {
-  Future<List<Post>> getPosts({int page = 1, int limit = 20});
+  Future<List<Post>> getPosts({int page = 1, int limit = 20, int? userId});
   Future<Post> getPostById(String id);
   Future<Post> createPost({
     required String title,
     required String description,
     required String type,
     int? photoId,
+    String? location,
   });
   Future<Post> updatePost(String id, Map<String, dynamic> data);
   Future<void> deletePost(String id);
-  Future<List<Post>> getMyPosts({int page = 1, int limit = 20});
+  Future<List<Post>> getMyPosts({int page = 1, int limit = 20, required int userId});
   Future<List<Post>> searchPosts(String query, {int page = 1, int limit = 20});
   Future<void> likePost(int postId);
   Future<void> unlikePost(int postId);
@@ -25,13 +26,20 @@ class PostRepository implements IPostRepository {
   PostRepository({required this.dioClient});
 
   @override
-  Future<List<Post>> getPosts({int page = 1, int limit = 20}) async {
+  Future<List<Post>> getPosts({int page = 1, int limit = 20, int? userId}) async {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+    };
+    
+    // Add user_id if provided to get user's posts
+    if (userId != null) {
+      queryParams['user_id'] = userId;
+    }
+    
     final response = await dioClient.get(
       ApiConfig.posts,
-      queryParameters: {
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: queryParams,
     );
 
     final data = response.data;
@@ -58,6 +66,7 @@ class PostRepository implements IPostRepository {
     required String description,
     required String type,
     int? photoId,
+    String? location,
   }) async {
     final response = await dioClient.post(
       ApiConfig.postsCreate,
@@ -67,6 +76,7 @@ class PostRepository implements IPostRepository {
         'type': type,
         'is_completed': false,
         if (photoId != null) 'photo': photoId,
+        if (location != null && location.isNotEmpty) 'location': location,
       },
     );
     final data = response.data;
@@ -95,21 +105,9 @@ class PostRepository implements IPostRepository {
   }
 
   @override
-  Future<List<Post>> getMyPosts({int page = 1, int limit = 20}) async {
-    final response = await dioClient.get(
-      '${ApiConfig.posts}my/',
-      queryParameters: {
-        'page': page,
-        'limit': limit,
-      },
-    );
-
-    final data = response.data;
-    if (data is Map && data['success'] == true && data.containsKey('data')) {
-      final List items = data['data'] as List;
-      return items.map((json) => Post.fromJson(json)).toList();
-    }
-    return [];
+  Future<List<Post>> getMyPosts({int page = 1, int limit = 20, required int userId}) async {
+    // Use the getPosts method with user_id query param
+    return getPosts(page: page, limit: limit, userId: userId);
   }
 
   @override

@@ -167,6 +167,33 @@ GoRouter buildRouter(AuthCubit authCubit) {
         ),
       ),
       GoRoute(
+        path: '/edit-post',
+        pageBuilder: (context, state) {
+          final args = state.extra as Map<String, dynamic>?;
+          final postId = args?['postId'] as int?;
+          
+          if (postId == null) {
+            return PageTransitions.slideFromRight(
+              Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: const Center(
+                  child: Text('Invalid post ID'),
+                ),
+              ),
+              state: state,
+            );
+          }
+          
+          return PageTransitions.slideFromRight(
+            MainScaffold(
+              currentPath: '/profile',
+              child: UploadPage(postId: postId),
+            ),
+            state: state,
+          );
+        },
+      ),
+      GoRoute(
         path: '/chat',
         pageBuilder: (context, state) {
           final args = state.extra as Map<String, dynamic>?;

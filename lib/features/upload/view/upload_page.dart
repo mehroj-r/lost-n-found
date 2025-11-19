@@ -8,15 +8,26 @@ import '../../../core/di/service_locator.dart';
 import '../cubit/upload_cubit.dart';
 
 class UploadPage extends StatelessWidget {
-  const UploadPage({super.key});
+  final int? postId; // If provided, we're in edit mode
+  
+  const UploadPage({super.key, this.postId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => UploadCubit(
-        postRepository: ServiceLocator().postRepository,
-        fileRepository: ServiceLocator().fileRepository,
-      ),
+      create: (context) {
+        final cubit = UploadCubit(
+          postRepository: ServiceLocator().postRepository,
+          fileRepository: ServiceLocator().fileRepository,
+        );
+        // If postId is provided, load the post for editing
+        if (postId != null) {
+          cubit.loadPostForEdit(postId!);
+        } else {
+          cubit.initializeForCreate();
+        }
+        return cubit;
+      },
       child: const UploadPageView(),
     );
   }
@@ -33,6 +44,7 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _locationController = TextEditingController();
   String _selectedType = 'lost';
   final ImagePicker _picker = ImagePicker();
   late AnimationController _animationController;
@@ -56,8 +68,20 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _locationController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _initializeFromPost() {
+    final cubit = context.read<UploadCubit>();
+    if (cubit.isEditMode && cubit.editingPost != null) {
+      final post = cubit.editingPost!;
+      _titleController.text = post.title;
+      _descriptionController.text = post.description;
+      _selectedType = post.type;
+      _locationController.text = post.location;
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -70,30 +94,7 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
       );
 
       if (image != null && mounted) {
-        // Show a snackbar for upload starting
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: const [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Text('Uploading image...'),
-              ],
-            ),
-            duration: const Duration(seconds: 2),
-            backgroundColor: Colors.blue.shade700,
-          ),
-        );
-
         context.read<UploadCubit>().selectImage(image.path);
-        // Upload image immediately
         await context.read<UploadCubit>().uploadImage(image.path);
       }
     } catch (e) {
@@ -179,11 +180,24 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
   void _submitPost() {
     if (_formKey.currentState!.validate()) {
       HapticFeedback.mediumImpact();
-      context.read<UploadCubit>().createPost(
-            title: _titleController.text.trim(),
-            description: _descriptionController.text.trim(),
-            type: _selectedType,
-          );
+      final cubit = context.read<UploadCubit>();
+      
+      if (cubit.isEditMode && cubit.editingPost != null) {
+        cubit.updatePost(
+          postId: cubit.editingPost!.id,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          type: _selectedType,
+          location: _locationController.text.trim(),
+        );
+      } else {
+        cubit.createPost(
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          type: _selectedType,
+          location: _locationController.text.trim(),
+        );
+      }
     } else {
       HapticFeedback.lightImpact();
     }
@@ -193,18 +207,27 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final cubit = context.watch<UploadCubit>();
+    final isEditMode = cubit.isEditMode;
+
+    // Initialize form fields when post is loaded
+    if (cubit.state is PostLoaded && _titleController.text.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeFromPost();
+      });
+    }
 
     return BlocListener<UploadCubit, UploadState>(
       listener: (context, state) {
-        if (state is PostCreated) {
+        if (state is PostCreated || state is PostUpdated) {
           HapticFeedback.heavyImpact();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Row(
+              content: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 12),
-                  Text('Post created successfully!'),
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Text(isEditMode ? 'Post updated successfully!' : 'Post created successfully!'),
                 ],
               ),
               backgroundColor: Colors.green.shade600,
@@ -215,11 +238,18 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
           // Clear form
           _titleController.clear();
           _descriptionController.clear();
+          _locationController.clear();
           setState(() => _selectedType = 'lost');
           context.read<UploadCubit>().reset();
-          // Navigate to home
+          // Navigate back
           Future.delayed(const Duration(milliseconds: 800), () {
-            if (mounted) context.go('/home');
+            if (mounted) {
+              if (isEditMode) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            }
           });
         } else if (state is UploadError) {
           HapticFeedback.heavyImpact();
@@ -267,7 +297,7 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
           scrolledUnderElevation: 0,
           backgroundColor: colorScheme.surface,
           title: Text(
-            'Create Post',
+            isEditMode ? 'Edit Post' : 'Create Post',
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 22,
@@ -278,9 +308,12 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
           actions: [
             BlocBuilder<UploadCubit, UploadState>(
               builder: (context, state) {
-                final isLoading = state is CreatingPost || state is UploadingImage;
+                final isLoading = state is CreatingPost || 
+                                 state is UpdatingPost || 
+                                 state is UploadingImage ||
+                                 state is LoadingPost;
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.only(right: 16),
                   child: FilledButton(
                     onPressed: isLoading ? null : _submitPost,
                     style: FilledButton.styleFrom(
@@ -303,9 +336,9 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
                               ),
                             ),
                           )
-                        : const Text(
-                            'Post',
-                            style: TextStyle(
+                        : Text(
+                            isEditMode ? 'Update' : 'Post',
+                            style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                             ),
@@ -318,390 +351,535 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
         ),
         body: FadeTransition(
           opacity: _fadeAnimation,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Image section with modern card design
-                  BlocBuilder<UploadCubit, UploadState>(
-                    builder: (context, state) {
-                      String? imagePath;
-                      bool isUploading = false;
+          child: BlocBuilder<UploadCubit, UploadState>(
+            builder: (context, state) {
+              if (state is LoadingPost) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
 
-                      if (state is UploadImageSelected) {
-                        imagePath = state.imagePath;
-                      } else if (state is UploadingImage) {
-                        isUploading = true;
-                      } else if (state is ImageUploaded) {
-                        imagePath = state.localPath;
-                      } else if (state is CreatingPost) {
-                        imagePath = state.localPath;
-                      }
-
-                      return Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          side: BorderSide(
-                            color: colorScheme.outlineVariant,
-                            width: 1,
-                          ),
-                        ),
-                        child: InkWell(
-                          onTap: imagePath == null ? _showImageSourceDialog : null,
-                          borderRadius: BorderRadius.circular(24),
-                          child: Container(
-                            height: 280,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: imagePath != null
-                                ? Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(24),
-                                        child: Image.file(
-                                          File(imagePath),
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      if (isUploading)
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.black54,
-                                            borderRadius: BorderRadius.circular(24),
-                                          ),
-                                          child: const Center(
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                CircularProgressIndicator(
-                                                  color: Colors.white,
-                                                  strokeWidth: 3,
-                                                ),
-                                                SizedBox(height: 16),
-                                                Text(
-                                                  'Uploading...',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      if (state is ImageUploaded)
-                                        Positioned(
-                                          top: 16,
-                                          right: 16,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 8,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.green.shade600,
-                                              borderRadius: BorderRadius.circular(20),
-                                              boxShadow: const [
-                                                BoxShadow(
-                                                  color: Colors.black26,
-                                                  blurRadius: 8,
-                                                  offset: Offset(0, 2),
-                                                ),
-                                              ],
-                                            ),
-                                            child: const Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.cloud_done,
-                                                  color: Colors.white,
-                                                  size: 18,
-                                                ),
-                                                SizedBox(width: 6),
-                                                Text(
-                                                  'Uploaded',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      Positioned(
-                                        bottom: 16,
-                                        right: 16,
-                                        child: Material(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(16),
-                                          elevation: 4,
-                                          child: InkWell(
-                                            onTap: () {
-                                              HapticFeedback.lightImpact();
-                                              context.read<UploadCubit>().removeImage();
-                                            },
-                                            borderRadius: BorderRadius.circular(16),
-                                            child: Container(
-                                              padding: const EdgeInsets.all(12),
-                                              child: Icon(
-                                                Icons.delete_outline,
-                                                color: Colors.red.shade600,
-                                                size: 24,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(24),
-                                        decoration: BoxDecoration(
-                                          color: colorScheme.primaryContainer,
-                                          borderRadius: BorderRadius.circular(24),
-                                        ),
-                                        child: Icon(
-                                          Icons.add_photo_alternate_outlined,
-                                          size: 48,
-                                          color: colorScheme.primary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Text(
-                                        'Add Photo',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w600,
-                                          color: colorScheme.onSurface,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Tap to select from gallery or camera',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 28),
-
-                  // Post type selector with modern design
-                  Text(
-                    'Post Type',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                      letterSpacing: 0.1,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100), // Extra bottom padding for navbar
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: _ModernTypeButton(
-                          label: 'Lost',
-                          icon: Icons.search_rounded,
-                          color: Colors.red,
-                          isSelected: _selectedType == 'lost',
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            setState(() => _selectedType = 'lost');
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _ModernTypeButton(
-                          label: 'Found',
-                          icon: Icons.check_circle_rounded,
-                          color: Colors.green,
-                          isSelected: _selectedType == 'found',
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            setState(() => _selectedType = 'found');
-                          },
-                        ),
-                      ),
+                      // Image section
+                      _buildImageSection(context, state),
+                      const SizedBox(height: 28),
+
+                      // Post type selector
+                      _buildPostTypeSelector(),
+                      const SizedBox(height: 28),
+
+                      // Title field
+                      _buildTitleField(colorScheme),
+                      const SizedBox(height: 20),
+
+                      // Location field
+                      _buildLocationField(colorScheme),
+                      const SizedBox(height: 20),
+
+                      // Description field
+                      _buildDescriptionField(colorScheme),
+                      const SizedBox(height: 32),
+
+                      // Submit button
+                      _buildSubmitButton(colorScheme, state, isEditMode),
+                      const SizedBox(height: 20),
                     ],
                   ),
-                  const SizedBox(height: 28),
-
-                  // Title field with modern design
-                  Text(
-                    'Title',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                      letterSpacing: 0.1,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _titleController,
-                    style: const TextStyle(fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'e.g., Lost iPhone 14 Pro',
-                      prefixIcon: const Icon(Icons.title_rounded),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: colorScheme.outline),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: colorScheme.outlineVariant),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: colorScheme.primary, width: 2),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: colorScheme.error),
-                      ),
-                      filled: true,
-                      fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                      counterStyle: const TextStyle(fontSize: 12),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a title';
-                      }
-                      if (value.trim().length < 3) {
-                        return 'Title must be at least 3 characters';
-                      }
-                      return null;
-                    },
-                    maxLength: 100,
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Description field with modern design
-                  Text(
-                    'Description',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                      letterSpacing: 0.1,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _descriptionController,
-                    style: const TextStyle(fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'Provide details about the item...',
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.only(bottom: 80),
-                        child: Icon(Icons.description_rounded),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: colorScheme.outline),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: colorScheme.outlineVariant),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: colorScheme.primary, width: 2),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: colorScheme.error),
-                      ),
-                      filled: true,
-                      fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                      alignLabelWithHint: true,
-                      counterStyle: const TextStyle(fontSize: 12),
-                    ),
-                    maxLines: 5,
-                    maxLength: 500,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a description';
-                      }
-                      if (value.trim().length < 10) {
-                        return 'Description must be at least 10 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Submit button with modern design
-                  BlocBuilder<UploadCubit, UploadState>(
-                    builder: (context, state) {
-                      final isLoading = state is CreatingPost || state is UploadingImage;
-                      return FilledButton(
-                        onPressed: isLoading ? null : _submitPost,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          backgroundColor: colorScheme.primary,
-                          disabledBackgroundColor: colorScheme.surfaceContainerHighest,
-                          elevation: 0,
-                        ),
-                        child: isLoading
-                            ? SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 3,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    colorScheme.onPrimary,
-                                  ),
-                                ),
-                              )
-                            : const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.send_rounded, size: 20),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Create Post',
-                                    style: TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildImageSection(BuildContext context, UploadState state) {
+    final colorScheme = Theme.of(context).colorScheme;
+    String? imagePath;
+    bool isUploading = false;
+    String? existingImageUrl;
+
+    if (state is UploadImageSelected) {
+      imagePath = state.imagePath;
+    } else if (state is UploadingImage) {
+      isUploading = true;
+      // Try to get image path from previous state
+      final cubit = context.read<UploadCubit>();
+      if (cubit.state is UploadImageSelected) {
+        imagePath = (cubit.state as UploadImageSelected).imagePath;
+      }
+    } else if (state is ImageUploaded) {
+      imagePath = state.localPath;
+    } else if (state is CreatingPost) {
+      imagePath = state.localPath;
+    } else if (state is UpdatingPost) {
+      imagePath = state.localPath;
+    } else if (state is PostLoaded) {
+      existingImageUrl = state.post.photo?.url;
+    }
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: colorScheme.outlineVariant,
+          width: 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: imagePath == null && existingImageUrl == null ? _showImageSourceDialog : null,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          height: 280,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: (imagePath != null || existingImageUrl != null)
+              ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: imagePath != null
+                          ? Image.file(
+                              File(imagePath),
+                              fit: BoxFit.cover,
+                            )
+                          : Image.network(
+                              existingImageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: colorScheme.surfaceContainerHighest,
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    size: 64,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    if (isUploading)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: const Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'Uploading...',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (state is ImageUploaded)
+                      Positioned(
+                        top: 16,
+                        right: 16,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade600,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.cloud_done,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Uploaded',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      bottom: 16,
+                      right: 16,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (imagePath != null || existingImageUrl != null)
+                            Material(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              elevation: 4,
+                              child: InkWell(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  _showImageSourceDialog();
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Icon(
+                                    Icons.edit_outlined,
+                                    color: colorScheme.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+                          Material(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            elevation: 4,
+                            child: InkWell(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                context.read<UploadCubit>().removeImage();
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                child: Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red.shade600,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Icon(
+                        Icons.add_photo_alternate_outlined,
+                        size: 48,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Add Photo',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tap to select from gallery or camera',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPostTypeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Post Type',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurface,
+            letterSpacing: 0.1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _ModernTypeButton(
+                label: 'Lost',
+                icon: Icons.search_rounded,
+                color: Colors.red,
+                isSelected: _selectedType == 'lost',
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedType = 'lost');
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _ModernTypeButton(
+                label: 'Found',
+                icon: Icons.check_circle_rounded,
+                color: Colors.green,
+                isSelected: _selectedType == 'found',
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedType = 'found');
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTitleField(ColorScheme colorScheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Title',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+            letterSpacing: 0.1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _titleController,
+          style: const TextStyle(fontSize: 16),
+          decoration: InputDecoration(
+            hintText: 'e.g., Lost iPhone 14 Pro',
+            prefixIcon: const Icon(Icons.title_rounded),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.outline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.outlineVariant),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.primary, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.error),
+            ),
+            filled: true,
+            fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            counterStyle: const TextStyle(fontSize: 12),
+          ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Please enter a title';
+            }
+            if (value.trim().length < 3) {
+              return 'Title must be at least 3 characters';
+            }
+            return null;
+          },
+          maxLength: 100,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationField(ColorScheme colorScheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Location',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+            letterSpacing: 0.1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _locationController,
+          style: const TextStyle(fontSize: 16),
+          decoration: InputDecoration(
+            hintText: 'e.g., MATH 690, UCA 115',
+            prefixIcon: const Icon(Icons.location_on_rounded),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.outline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.outlineVariant),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.primary, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.error),
+            ),
+            filled: true,
+            fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Please enter a location';
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDescriptionField(ColorScheme colorScheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Description',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+            letterSpacing: 0.1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _descriptionController,
+          style: const TextStyle(fontSize: 16),
+          decoration: InputDecoration(
+            hintText: 'Provide details about the item...',
+            prefixIcon: const Padding(
+              padding: EdgeInsets.only(bottom: 80),
+              child: Icon(Icons.description_rounded),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.outline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.outlineVariant),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.primary, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.error),
+            ),
+            filled: true,
+            fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            alignLabelWithHint: true,
+            counterStyle: const TextStyle(fontSize: 12),
+          ),
+          maxLines: 5,
+          maxLength: 500,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Please enter a description';
+            }
+            if (value.trim().length < 10) {
+              return 'Description must be at least 10 characters';
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton(ColorScheme colorScheme, UploadState state, bool isEditMode) {
+    final isLoading = state is CreatingPost || state is UpdatingPost || state is UploadingImage;
+    
+    return FilledButton(
+      onPressed: isLoading ? null : _submitPost,
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        backgroundColor: colorScheme.primary,
+        disabledBackgroundColor: colorScheme.surfaceContainerHighest,
+        elevation: 0,
+      ),
+      child: isLoading
+          ? SizedBox(
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  colorScheme.onPrimary,
+                ),
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.send_rounded, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  isEditMode ? 'Update Post' : 'Create Post',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
@@ -826,4 +1004,3 @@ class _ModernTypeButton extends StatelessWidget {
     );
   }
 }
-
