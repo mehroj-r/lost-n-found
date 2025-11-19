@@ -8,6 +8,7 @@ from apps.post.models import Post
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     photo = FileSerializer(read_only=True)
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
@@ -21,6 +22,7 @@ class PostSerializer(serializers.ModelSerializer):
             'type',
             'is_completed',
             'like_count',
+            'is_liked',
             'author',
             'created_at',
         ]
@@ -28,3 +30,9 @@ class PostSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
         return super().create(validated_data)
+
+    def get_is_liked(self, obj):
+        user = self.context['request'].user
+        if user.is_anonymous:
+            return False
+        return obj.likes.filter(id=user.id).exists()

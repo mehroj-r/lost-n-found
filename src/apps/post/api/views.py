@@ -52,7 +52,7 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
     def _like_post(self, request, pk=None):
         post = self.get_object()
         post.likes.add(request.user)
-        post.like_count += post.likes.count()
+        post.like_count = post.likes.count()
         post.save()
         serializer = self.get_serializer(post)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
