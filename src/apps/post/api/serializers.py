@@ -16,6 +16,8 @@ class PostSerializer(serializers.ModelSerializer):
             'photo',
             'title',
             'description',
+            'tags',
+            'location',
             'type',
             'is_completed',
             'like_count',
