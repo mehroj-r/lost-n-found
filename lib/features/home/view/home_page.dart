@@ -126,7 +126,7 @@ class _HomePageState extends State<HomePage> {
             return RefreshIndicator(
               onRefresh: _controller.refresh,
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 100), // Add bottom padding for navbar
+                padding: const EdgeInsets.only(bottom: 120), // Add bottom padding for navbar
                 children: [
                   _buildBannersSection(),
                   Center(
@@ -171,7 +171,7 @@ class _HomePageState extends State<HomePage> {
             return RefreshIndicator(
               onRefresh: _controller.refresh,
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 100), // Add bottom padding for navbar
+                padding: const EdgeInsets.only(bottom: 120), // Add bottom padding for navbar
                 children: [
                   _buildBannersSection(),
                   Center(
@@ -210,7 +210,7 @@ class _HomePageState extends State<HomePage> {
             onRefresh: _controller.refresh,
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.only(bottom: 100), // Increased from 16 to 100 for navbar clearance
+              padding: const EdgeInsets.only(bottom: 120), // Further increased for navbar clearance
               itemCount: _controller.posts.length + (_controller.hasMore ? 1 : 0) + 1, // +1 for banner
               itemBuilder: (context, index) {
                 // Show banners at the top

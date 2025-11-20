@@ -284,7 +284,7 @@ class _NavItemState extends State<_NavItem>
                 color: isSelected
                     ? const Color(0xFF4F46E5).withValues(alpha: 0.1)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: AnimatedBuilder(
                 animation: _controller,

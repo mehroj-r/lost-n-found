@@ -722,9 +722,18 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
   }
 
   Widget _buildOverlayMessageButton() {
+    // Get current user from AuthCubit
+    final authState = context.read<AuthCubit>().state;
+    final currentUserId = authState.user?.id;
+    
+    // Don't show message button for own posts or if not authenticated
+    if (currentUserId == null || widget.post.author.id == currentUserId) {
+      return const SizedBox.shrink();
+    }
+
     return GestureDetector(
       onTap: () {
-        // TODO: Implement messaging
+        context.go('/chat', extra: {'postId': widget.post.id});
       },
       child: Container(
         padding: const EdgeInsets.all(8),
@@ -861,7 +870,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
             icon: Icons.message_outlined,
             label: 'Message',
             onTap: () {
-              // TODO: Implement messaging
+              context.go('/chat', extra: {'postId': widget.post.id});
             },
           ),
         ],
@@ -977,7 +986,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
             gradient: LinearGradient(
               colors: [
                 Theme.of(context).primaryColor,
-                Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                Theme.of(context).primaryColor.withValues(alpha: 0.85),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -985,16 +994,16 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.25),
-                blurRadius: 8,
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
+                blurRadius: 16,
                 offset: const Offset(0, 4),
-                spreadRadius: 0,
+                spreadRadius: -1,
               ),
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-                spreadRadius: 0,
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+                spreadRadius: -2,
               ),
             ],
           ),
@@ -1002,25 +1011,25 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(2),
+                padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  Icons.chat_bubble_outline_rounded,
-                  size: 16,
+                  Icons.forum_rounded,
+                  size: 14,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Text(
                 'Message',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  letterSpacing: 0.2,
+                  letterSpacing: 0.3,
                 ),
               ),
             ],
