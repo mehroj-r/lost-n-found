@@ -9,8 +9,9 @@ class AppUser {
   final String email;
   final String username;
   final String gender;
-  final String? avatarUrl;
-  final Photo? avatar;
+  final String? avatarUrl; // final URL to display
+  final Photo? avatar;     // optional full object, if backend ever sends it
+  final String? bio;
 
   AppUser({
     required this.id,
@@ -23,20 +24,40 @@ class AppUser {
     required this.gender,
     this.avatarUrl,
     this.avatar,
+    this.bio,
   });
 
-  factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
-    id: j['id'] ?? 0,
-    firstName: j['first_name'] as String? ?? '',
-    lastName: j['last_name'] as String? ?? '',
-    patronymic: j['patronymic'] as String?,
-    phoneNumber: j['phone'] as String? ?? '',
-    email: j['email'] as String? ?? '',
-    username: j['username'] as String? ?? '',
-    gender: j['gender'] as String? ?? '',
-    avatarUrl: j['avatarUrl'] as String?,
-    avatar: j['avatar'] != null ? Photo.fromJson(j['avatar']) : null,
-  );
+  factory AppUser.fromJson(Map<String, dynamic> j) {
+    // avatar can be either a String (URL) or a Map (Photo object)
+    final dynamic avatarRaw = j['avatar'];
+    String? avatarUrl;
+    Photo? avatarPhoto;
+
+    if (avatarRaw is String) {
+      // backend returns direct URL string
+      avatarUrl = avatarRaw;
+    } else if (avatarRaw is Map<String, dynamic>) {
+      avatarPhoto = Photo.fromJson(avatarRaw);
+      avatarUrl = avatarPhoto.url;
+    }
+
+    // If there is an explicit avatar_url field, prefer that
+    avatarUrl = j['avatar_url'] as String? ?? avatarUrl;
+
+    return AppUser(
+      id: j['id'] ?? 0,
+      firstName: j['first_name'] as String? ?? '',
+      lastName: j['last_name'] as String? ?? '',
+      patronymic: j['patronymic'] as String?,
+      phoneNumber: j['phone'] as String? ?? '',
+      email: j['email'] as String? ?? '',
+      username: j['username'] as String? ?? '',
+      gender: j['gender'] as String? ?? '',
+      bio: j['bio'] as String?,
+      avatarUrl: avatarUrl,
+      avatar: avatarPhoto,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -47,7 +68,7 @@ class AppUser {
     'email': email,
     'username': username,
     'gender': gender,
-    'avatarUrl': avatarUrl,
-    'avatar': avatar?.toJson(),
+    'bio': bio,
+    // no avatar/avatarUrl here; controller sends avatar id explicitly
   };
 }
