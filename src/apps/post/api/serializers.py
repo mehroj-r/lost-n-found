@@ -7,7 +7,6 @@ from apps.post.models import Post
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
-    photo = FileSerializer(read_only=True)
     is_liked = serializers.SerializerMethodField()
 
     class Meta:
@@ -36,3 +35,11 @@ class PostSerializer(serializers.ModelSerializer):
         if user.is_anonymous:
             return False
         return obj.likes.filter(id=user.id).exists()
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.photo:
+            representation['photo'] = FileSerializer(instance.photo, context=self.context).data
+        else:
+            representation['photo'] = None
+        return representation
