@@ -2,7 +2,7 @@ from django.db import models
 
 from apps.account.models import User
 from apps.core.models import TimestampedModel
-from apps.core.utils.constants import NotificationType
+from apps.core.utils.constants import NotificationType, NotificationBroadcast
 
 
 class Notification(TimestampedModel):
@@ -10,6 +10,7 @@ class Notification(TimestampedModel):
     title = models.CharField(max_length=255)
     message = models.TextField()
     type = models.CharField(max_length=100, choices=NotificationType.choices, default=NotificationType.MESSAGE)
+    broadcast_type = models.CharField(max_length=100, choices=NotificationBroadcast.choices, blank=True, null=True)
 
     def __str__(self):
         return f"Notification {self.id} - {self.type}"
