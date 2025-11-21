@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../data/models/post.dart';
 import '../../../data/repositories/post_repository.dart';
+import '../../auth/cubit/auth_cubit.dart';
 
 class MyPostsController extends ChangeNotifier {
   final IPostRepository _postRepository = ServiceLocator().postRepository;
+  final AuthCubit? _authCubit;
   
   List<Post> _posts = [];
   bool _isLoading = false;
   String? _error;
   String _selectedFilter = 'All';
+
+  MyPostsController({AuthCubit? authCubit}) : _authCubit = authCubit;
 
   List<Post> get posts => _getFilteredPosts();
   List<Post> get allPosts => _posts;
@@ -34,12 +39,36 @@ class MyPostsController extends ChangeNotifier {
   Future<void> fetchMyPosts() async {
     if (_isLoading) return;
 
+    // Get current user ID from auth cubit
+    int? userId;
+    if (_authCubit != null && _authCubit!.state.user != null) {
+      userId = _authCubit!.state.user!.id;
+    } else {
+      // Fallback: try to get from user repository
+      try {
+        final user = await ServiceLocator().userRepository.getCurrentUser();
+        userId = user.id;
+      } catch (e) {
+        _error = 'Failed to get user ID: ${e.toString()}';
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+    }
+
+    if (userId == null || userId == 0) {
+      _error = 'User not authenticated';
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _posts = await _postRepository.getMyPosts();
+      _posts = await _postRepository.getMyPosts(userId: userId);
     } catch (e) {
       _error = e.toString();
     } finally {
