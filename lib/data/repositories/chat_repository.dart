@@ -52,7 +52,7 @@ class ApiChatRepository implements ChatRepository {
   @override
   Future<List<Message>> getMessages(String chatId) async {
     try {
-      final response = await _dioClient.get('${ApiConfig.chatMessages}$chatId/messages/');
+      final response = await _dioClient.get('${ApiConfig.chatMessages}$chatId/messages');
       
       final data = response.data;
       if (data is Map && data['success'] == true && data.containsKey('data')) {
@@ -72,7 +72,7 @@ class ApiChatRepository implements ChatRepository {
   Future<Message> sendMessage(String chatId, String content) async {
     try {
       final response = await _dioClient.post(
-        '${ApiConfig.chatSendMessage}$chatId/messages/',
+        '${ApiConfig.chatSendMessage}$chatId/message',
         data: {
           'content': content,
         },

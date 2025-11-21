@@ -3,7 +3,7 @@ import '../../core/config/api_config.dart';
 import '../models/post.dart';
 
 abstract class IPostRepository {
-  Future<List<Post>> getPosts({int page = 1, int limit = 20, int? userId});
+  Future<List<Post>> getPosts({int page = 1, int limit = 20});
   Future<Post> getPostById(String id);
   Future<Post> createPost({
     required String title,
@@ -15,7 +15,7 @@ abstract class IPostRepository {
   Future<Post> updatePost(String id, Map<String, dynamic> data);
   Future<void> deletePost(String id);
   Future<List<Post>> getMyPosts({int page = 1, int limit = 20, required int userId});
-  Future<List<Post>> searchPosts(String query, {int page = 1, int limit = 20});
+  Future<List<Post>> searchPosts(String query, {int page = 1, int limit = 20, String? type, DateTime? dateStart, DateTime? dateEnd, String? orderBy});
   Future<void> likePost(int postId);
   Future<void> unlikePost(int postId);
 }
@@ -31,12 +31,12 @@ class PostRepository implements IPostRepository {
       'page': page,
       'limit': limit,
     };
-    
+
     // Add user_id if provided to get user's posts
     if (userId != null) {
       queryParams['user_id'] = userId;
     }
-    
+
     final response = await dioClient.get(
       ApiConfig.posts,
       queryParameters: queryParams,
@@ -111,14 +111,36 @@ class PostRepository implements IPostRepository {
   }
 
   @override
-  Future<List<Post>> searchPosts(String query, {int page = 1, int limit = 20}) async {
+  Future<List<Post>> searchPosts(String query, {int page = 1, int limit = 20, String? type, DateTime? dateStart, DateTime? dateEnd, String? orderBy}) async {
+    Map<String, dynamic> queryParameters = {
+      'query': query,
+      'page': page,
+      'limit': limit,
+    };
+
+    // Add type filter if provided
+    if (type != null && type.isNotEmpty) {
+      queryParameters['type'] = type;
+    }
+
+    // Add date start filter if provided
+    if (dateStart != null) {
+      queryParameters['date_start'] = '${dateStart.year}-${dateStart.month.toString().padLeft(2, '0')}-${dateStart.day.toString().padLeft(2, '0')}';
+    }
+
+    // Add date end filter if provided
+    if (dateEnd != null) {
+      queryParameters['date_end'] = '${dateEnd.year}-${dateEnd.month.toString().padLeft(2, '0')}-${dateEnd.day.toString().padLeft(2, '0')}';
+    }
+
+    // Add order by filter if provided
+    if (orderBy != null && orderBy.isNotEmpty) {
+      queryParameters['order_by'] = orderBy;
+    }
+
     final response = await dioClient.get(
       ApiConfig.posts,
-      queryParameters: {
-        'query': query,
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: queryParameters,
     );
 
     final data = response.data;

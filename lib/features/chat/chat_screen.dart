@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../core/router/navigation_history.dart';
 import '../../data/models/message.dart';
 import '../../data/models/chat_details.dart';
 import '../../features/auth/cubit/auth_cubit.dart';
@@ -60,7 +59,9 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    _chatCubit.stopMessageUpdates();
+    if (mounted) {
+      _chatCubit.stopMessageUpdates();
+    }
     super.dispose();
   }
 
@@ -101,25 +102,27 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
   }
 
   void _handleBackNavigation() {
-    final navigationHistory = NavigationHistory();
-    final backDestination = navigationHistory.getBackDestination();
-    
-    if (backDestination != null && backDestination != '/chat') {
-      navigationHistory.pop();
-      context.go(backDestination);
-    } else {
-      // Default fallback - go to chat list or home
-      context.go('/chat-list');
+    // Use context.pop() first, fallback to home if it fails
+    try {
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      } else {
+        context.go('/home');
+      }
+    } catch (e) {
+      // Fallback to home if navigation fails
+      context.go('/home');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: true,
       onPopInvokedWithResult: (bool didPop, dynamic result) async {
-        if (didPop) return;
-        _handleBackNavigation();
+        if (!didPop) {
+          _handleBackNavigation();
+        }
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
@@ -416,7 +419,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
     return ListView.builder(
       controller: _scrollController,
       reverse: true, // Show newest messages at bottom
-      padding: const EdgeInsets.fromLTRB(16, 16, 8, 16), // Reduced right padding
+      padding: const EdgeInsets.fromLTRB(16, 16, 4, 16), // Further reduced right padding
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
@@ -436,8 +439,8 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
         children: [
           if (!isOutgoing) ...[
             Container(
-              width: 34,
-              height: 34,
+              width: 40, // Increased from 34
+              height: 40, // Increased from 34
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Theme.of(context).primaryColor.withAlpha(51),
@@ -446,8 +449,8 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
                   ? ClipOval(
                       child: Image.network(
                         message.sender.avatar!.url,
-                        width: 34,
-                        height: 34,
+                        width: 40, // Increased from 34
+                        height: 40, // Increased from 34
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Center(
                           child: Text(
@@ -526,8 +529,11 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
             ),
           ),
           ),
-          // Add space only on the left side for incoming messages
-          if (!isOutgoing) const SizedBox(width: 28),
+          // Add space for outgoing messages on right, incoming on left
+          if (isOutgoing) 
+            const SizedBox(width: 12)  // Right margin for outgoing messages
+          else 
+            const SizedBox(width: 28), // Left margin for incoming messages
         ],
       ),
     );
@@ -546,52 +552,62 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxHeight: 120, // Limit maximum height of input field
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: TextField(
-                  controller: _messageController,
-                  decoration: const InputDecoration(
-                    hintText: 'Type a message...',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    hintStyle: TextStyle(color: Colors.grey),
+      child: SafeArea(
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minHeight: 44,
+                    maxHeight: 120, // Increased maximum height
                   ),
-                  maxLines: 5,  // Limit to 5 lines maximum
-                  minLines: 1,  // Start with 1 line
-                  textCapitalization: TextCapitalization.sentences,
-                  onSubmitted: (_) => _sendMessage(),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Scrollbar(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: const InputDecoration(
+                        hintText: 'Type a message...',
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        hintStyle: TextStyle(color: Colors.grey),
+                        isDense: true,
+                      ),
+                      maxLines: null,  // Allow unlimited lines
+                      minLines: 1,     // Start with 1 line
+                      textCapitalization: TextCapitalization.sentences,
+                      onSubmitted: (_) => _sendMessage(),
+                      textInputAction: TextInputAction.newline,
+                      style: const TextStyle(fontSize: 16),
+                      scrollPhysics: const ClampingScrollPhysics(),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _sendMessage,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-                shape: BoxShape.circle,
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _sendMessage,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.send,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
               ),
-              child: const Icon(
-                Icons.send,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
