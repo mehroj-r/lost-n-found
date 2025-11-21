@@ -14,6 +14,6 @@ class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         self.queryset = self.get_queryset().filter(
-            Q(users=request.user) | Q(brodcast_type=NotificationBroadcast.ALL)
+            Q(users=request.user) | Q(broadcast_type=NotificationBroadcast.ALL)
         ).order_by('-created_at')
         return super().list(request, *args, **kwargs)
