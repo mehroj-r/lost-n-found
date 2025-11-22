@@ -1,4 +1,4 @@
-from django.db.models import Q, Case
+from django.db.models import Q, Case, When, BooleanField
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -14,14 +14,18 @@ class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Notification.objects.all()
 
+
     def list(self, request, *args, **kwargs):
         self.queryset = self.get_queryset().filter(
             Q(users=request.user) | Q(broadcast_type=NotificationBroadcast.ALL)
         ).annotate(
             is_read=Case(
+                When(
+                    Q(notificationuser__user=request.user, notificationuser__is_read=True),
+                    then=True
+                ),
                 default=False,
-                when=Q(notificationuser__user=request.user, notificationuser__is_read=True),
-                then=True
+                output_field=BooleanField()
             )
         ).order_by('-created_at')
         return super().list(request, *args, **kwargs)
@@ -36,7 +40,7 @@ class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
         return Response({'detail': 'Notification marked as read.'}, status=status.HTTP_200_OK)
 
 
-    @action(methods=['POST'], detail=False, url_path='read-all', url_name='readl_all_notifications')
+    @action(methods=['POST'], detail=False, url_path='read-all', url_name='read_all_notifications')
     def read_all(self, request, *args, **kwargs):
         notifications = self.get_queryset().filter(
             Q(users=request.user) | Q(broadcast_type=NotificationBroadcast.ALL)
