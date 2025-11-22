@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:lost_n_found/shared/widgets/CustomTextField.dart';
 import '../../auth/cubit/auth_cubit.dart';
 import '../controller/edit_profile_controller.dart';
-import 'package:go_router/go_router.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key}) : super(key: key);
@@ -34,12 +36,45 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (!mounted) return;
 
     if (success) {
-      context.pop(); // back to Profile using go_router
+      context.pop(); // back to Profile
     } else if (_controller.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_controller.error!)),
       );
     }
+  }
+
+  Widget _buildAvatarChild() {
+    final preview = _controller.avatarPreview;
+
+    if (preview != null && preview.isNotEmpty) {
+      if (preview.startsWith('http://') || preview.startsWith('https://')) {
+        // Existing avatar from backend
+        return Image.network(
+          preview,
+          width: 110,
+          height: 110,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) =>
+          const Icon(Icons.person, size: 55, color: Colors.white),
+        );
+      } else {
+        // Local file path from picker
+        return Image.file(
+          File(preview),
+          width: 110,
+          height: 110,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) {
+            debugPrint('Failed to load local avatar from $preview');
+            return const Icon(Icons.person, size: 55, color: Colors.white);
+          },
+        );
+      }
+    }
+
+    // No preview -> default icon
+    return const Icon(Icons.person, size: 55, color: Colors.white);
   }
 
   @override
@@ -49,12 +84,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => context.pop(),
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
         title: const Text(
-          "Edit Profile",
+          'Edit Profile',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -70,10 +105,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 Stack(
                   alignment: Alignment.center,
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 55,
-                      backgroundColor: Color(0xFFE0E0E0),
-                      child: Icon(Icons.person, size: 55, color: Colors.white),
+                      backgroundColor: const Color(0xFFE0E0E0),
+                      child: ClipOval(
+                        child: _buildAvatarChild(),
+                      ),
                     ),
                     Positioned(
                       bottom: 0,
@@ -88,11 +125,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           ),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.edit,
-                              size: 18, color: Colors.black),
-                          onPressed: () {
-                            // TODO: add image picker later
-                          },
+                          icon: _controller.isUploadingAvatar
+                              ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                              : const Icon(
+                            Icons.edit,
+                            size: 18,
+                            color: Colors.black,
+                          ),
+                          onPressed: _controller.isUploadingAvatar
+                              ? null
+                              : () => _controller.pickAndUploadAvatar(),
                         ),
                       ),
                     ),
@@ -102,62 +150,159 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 const SizedBox(height: 30),
 
                 // First name
-                CustomTextField(
-                  label: "First Name",
-                  controller: _controller.firstNameController,
+                Card(
+                  elevation: 1.5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    child: CustomTextField(
+                      label: 'First Name',
+                      controller: _controller.firstNameController,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // Last name
-                CustomTextField(
-                  label: "Last Name",
-                  controller: _controller.lastNameController,
+                Card(
+                  elevation: 1.5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    child: CustomTextField(
+                      label: 'Last Name',
+                      controller: _controller.lastNameController,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // Patronymic
-                CustomTextField(
-                  label: "Patronymic (optional)",
-                  controller: _controller.patronymicController,
+                Card(
+                  elevation: 1.5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    child: CustomTextField(
+                      label: 'Patronymic',
+                      controller: _controller.patronymicController,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // Phone
-                CustomTextField(
-                  label: "Phone Number",
-                  controller: _controller.phoneController,
-                  keyboardType: TextInputType.phone,
+                Card(
+                  elevation: 1.5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    child: CustomTextField(
+                      label: 'Phone Number',
+                      controller: _controller.phoneController,
+                      keyboardType: TextInputType.phone,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-
-                // Email
-                CustomTextField(
-                  label: "Email",
-                  controller: _controller.emailController,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // Username
-                CustomTextField(
-                  label: "Username",
-                  controller: _controller.usernameController,
+                Card(
+                  elevation: 1.5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    child: CustomTextField(
+                      label: 'Username',
+                      controller: _controller.usernameController,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
-                // Gender dropdown (similar to registration)
-                DropdownButtonFormField<String>(
-                  value: _controller.gender.isEmpty
-                      ? null
-                      : _controller.gender,
-                  items: const [
-                    DropdownMenuItem(value: 'male', child: Text('Male')),
-                    DropdownMenuItem(value: 'female', child: Text('Female')),
-                  ],
-                  onChanged: (v) => _controller.setGender(v),
-                  decoration: const InputDecoration(
-                    labelText: 'Gender',
-                    border: OutlineInputBorder(),
+                // Bio
+                Card(
+                  elevation: 1.5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    child: CustomTextField(
+                      label: 'Bio',
+                      controller: _controller.bioController,
+                      maxLines: 3,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Gender dropdown
+                Card(
+                  elevation: 1.5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      value: _controller.gender.isEmpty
+                          ? null
+                          : _controller.gender,
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'male',
+                          child: Text('Male'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'female',
+                          child: Text('Female'),
+                        ),
+                      ],
+                      onChanged: (v) => _controller.setGender(v),
+                      decoration: const InputDecoration(
+                        labelText: 'Gender',
+                        border: InputBorder.none,
+                      ),
+                    ),
                   ),
                 ),
 
@@ -184,7 +329,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                     )
                         : const Text(
-                      "SAVE CHANGES",
+                      'SAVE CHANGES',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
