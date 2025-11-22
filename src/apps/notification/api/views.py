@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Case
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -18,7 +18,11 @@ class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
         self.queryset = self.get_queryset().filter(
             Q(users=request.user) | Q(broadcast_type=NotificationBroadcast.ALL)
         ).annotate(
-            is_read=~Q(notificationuser__user=request.user, notificationuser__is_read=False)
+            is_read=Case(
+                default=False,
+                when=Q(notificationuser__user=request.user, notificationuser__is_read=True),
+                then=True
+            )
         ).order_by('-created_at')
         return super().list(request, *args, **kwargs)
 
