@@ -3,7 +3,7 @@ import '../../core/config/api_config.dart';
 import '../models/post.dart';
 
 abstract class IPostRepository {
-  Future<List<Post>> getPosts({int page = 1, int limit = 20});
+  Future<List<Post>> getPosts({int page = 1, int limit = 20, int userId});
   Future<Post> getPostById(String id);
   Future<Post> createPost({
     required String title,
