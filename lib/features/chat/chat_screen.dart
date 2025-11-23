@@ -127,7 +127,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         body: BlocBuilder<ChatCubit, ChatState>(
-        builder: (context, state) {
+          builder: (context, state) {
           if (state is ChatLoading) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -169,7 +169,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
 
           return const SizedBox.shrink();
         },
-      ),
+        ),
       ),
     );
   }
@@ -419,7 +419,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
     return ListView.builder(
       controller: _scrollController,
       reverse: true, // Show newest messages at bottom
-      padding: const EdgeInsets.fromLTRB(16, 16, 4, 16), // Further reduced right padding
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
@@ -432,15 +432,15 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
 
   Widget _buildMessageBubble(Message message, bool isOutgoing) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         mainAxisAlignment: isOutgoing ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isOutgoing) ...[
             Container(
-              width: 40, // Increased from 34
-              height: 40, // Increased from 34
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Theme.of(context).primaryColor.withAlpha(51),
@@ -449,8 +449,8 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
                   ? ClipOval(
                       child: Image.network(
                         message.sender.avatar!.url,
-                        width: 40, // Increased from 34
-                        height: 40, // Increased from 34
+                        width: 40,
+                        height: 40,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Center(
                           child: Text(
@@ -478,10 +478,9 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
             const SizedBox(width: 8),
           ],
           Flexible(
-            flex: 1,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75, // Max 75% of screen width
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
               ),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -495,7 +494,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(13),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -514,26 +513,21 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
                       softWrap: true,
                       overflow: TextOverflow.visible,
                     ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getTimeAgo(message.createdAt),
-                    style: TextStyle(
-                      color: isOutgoing 
-                          ? Colors.white.withAlpha(179)
-                          : Colors.grey[500],
-                      fontSize: 12,
+                    const SizedBox(height: 4),
+                    Text(
+                      _getTimeAgo(message.createdAt),
+                      style: TextStyle(
+                        color: isOutgoing 
+                            ? Colors.white.withValues(alpha: 0.7)
+                            : Colors.grey[500],
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-          ),
-          // Add space for outgoing messages on right, incoming on left
-          if (isOutgoing) 
-            const SizedBox(width: 12)  // Right margin for outgoing messages
-          else 
-            const SizedBox(width: 28), // Left margin for incoming messages
         ],
       ),
     );
@@ -541,67 +535,70 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
 
   Widget _buildMessageInput() {
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom + 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: IntrinsicHeight(
+      color: const Color(0xFFF8FAFC), // Match scaffold background
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
                 child: Container(
                   constraints: const BoxConstraints(
-                    minHeight: 44,
-                    maxHeight: 120, // Increased maximum height
+                    minHeight: 40,
+                    maxHeight: 100,
                   ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Scrollbar(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: 'Type a message...',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        hintStyle: TextStyle(color: Colors.grey),
-                        isDense: true,
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: const InputDecoration(
+                      hintText: 'Type a message...',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                      hintStyle: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 16,
                       ),
-                      maxLines: null,  // Allow unlimited lines
-                      minLines: 1,     // Start with 1 line
-                      textCapitalization: TextCapitalization.sentences,
-                      onSubmitted: (_) => _sendMessage(),
-                      textInputAction: TextInputAction.newline,
-                      style: const TextStyle(fontSize: 16),
-                      scrollPhysics: const ClampingScrollPhysics(),
+                      isDense: true,
                     ),
+                    maxLines: null,
+                    minLines: 1,
+                    textCapitalization: TextCapitalization.sentences,
+                    onSubmitted: (_) => _sendMessage(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      height: 1.4,
+                    ),
+                    scrollPhysics: const ClampingScrollPhysics(),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               GestureDetector(
                 onTap: _sendMessage,
                 child: Container(
-                  width: 44,
-                  height: 44,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: Theme.of(context).primaryColor,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.send,
+                    Icons.send_rounded,
                     color: Colors.white,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
               ),

@@ -52,6 +52,8 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       _showFilters = !_showFilters;
       if (_showFilters) {
         _filterAnimationController.forward();
+        // Dismiss keyboard when opening filters to avoid layout issues
+        FocusScope.of(context).unfocus();
       } else {
         _filterAnimationController.reverse();
       }
@@ -61,6 +63,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Column(
           children: [
@@ -377,19 +380,25 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Widget _buildFilterSection() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.5, // Reduced from 0.4 to 0.5
+      ),
       decoration: BoxDecoration(
         color: Colors.grey[50],
         border: Border(
           bottom: BorderSide(color: Colors.grey[200]!),
         ),
       ),
-      child: AnimatedBuilder(
-        animation: _searchController,
-        builder: (context, child) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        physics: const BouncingScrollPhysics(),
+        child: AnimatedBuilder(
+          animation: _searchController,
+          builder: (context, child) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
           Text(
             'Filters',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -682,12 +691,13 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               _buildQuickFilterChip(
                 label: 'Last Month',
                 onTap: () => _searchController.setLastMonthFilter(),
-              ),
+                ),
             ],
-            ),
+          ),
         ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -874,16 +884,18 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            '${_searchController.searchResults.length} result${_searchController.searchResults.length == 1 ? '' : 's'} for "${_searchController.currentQuery}"',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
+        // Only show result count if there's actually a search query
+        if (_searchController.currentQuery.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              '${_searchController.searchResults.length} result${_searchController.searchResults.length == 1 ? '' : 's'} for "${_searchController.currentQuery}"',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
             ),
           ),
-        ),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.only(bottom: 100), // Add bottom padding for navbar
@@ -940,15 +952,6 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            'Recent Posts',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.only(bottom: 100), // Add bottom padding for navbar
