@@ -31,6 +31,17 @@ class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
 
+    @action(methods=['GET'], detail=False, url_path='unread-count', url_name='unread_count')
+    def unread_count(self, request, *args, **kwargs):
+        count = self.get_queryset().filter(
+            Q(users=request.user) | Q(broadcast_type=NotificationBroadcast.ALL)
+        ).exclude(
+            notificationuser__user=request.user,
+            notificationuser__is_read=True
+        ).count()
+        return Response({'unread_count': count}, status=status.HTTP_200_OK)
+
+
     @action(methods=['POST'], detail=True, url_path='read', url_name='read_notification')
     def read(self, request, *args, **kwargs):
         notification = self.get_object()
