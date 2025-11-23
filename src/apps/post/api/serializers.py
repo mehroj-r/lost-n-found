@@ -26,6 +26,15 @@ class PostSerializer(serializers.ModelSerializer):
             'created_at',
         ]
 
+        extra_kwargs = {
+            'photo': {'required': False, 'allow_null': True},
+            'tags': {'required': False},
+            'location': {'required': True, 'allow_null': False, 'allow_blank': False},
+            'like_count': {'read_only': True},
+            'is_liked': {'read_only': True},
+            'created_at': {'read_only': True},
+        }
+
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
         return super().create(validated_data)
