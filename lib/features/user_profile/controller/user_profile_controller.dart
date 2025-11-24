@@ -3,11 +3,19 @@ import '../../../core/di/service_locator.dart';
 import '../../../data/models/user.dart';
 import '../../../data/models/post.dart';
 import '../../../data/repositories/post_repository.dart';
+<<<<<<< HEAD
+=======
+import '../../../data/repositories/user_repository.dart';
+>>>>>>> mobile
 
 class UserProfileController extends ChangeNotifier {
   final int userId;
   final AppUser? initialUser;
   final IPostRepository _postRepository = ServiceLocator().postRepository;
+<<<<<<< HEAD
+=======
+  final IUserRepository _userRepository = ServiceLocator().userRepository;
+>>>>>>> mobile
 
   AppUser? _user;
   List<Post> _posts = [];
@@ -39,7 +47,13 @@ class UserProfileController extends ChangeNotifier {
     notifyListeners();
 
     try {
+<<<<<<< HEAD
       // Use initial user if available
+=======
+      // Try to get user from API
+      // Note: The API might not have a direct user endpoint, so we'll use the posts to get user info
+      // For now, if we have initial user, we'll use it
+>>>>>>> mobile
       if (initialUser != null && initialUser!.id == userId) {
         _user = initialUser;
       } else {

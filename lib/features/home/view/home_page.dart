@@ -65,6 +65,43 @@ class _HomePageState extends State<HomePage> {
           }
 
           if (_controller.error != null && _controller.posts.isEmpty) {
+            return RefreshIndicator(
+              onRefresh: _controller.refresh,
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 120), // Add bottom padding for navbar
+                children: [
+                  _buildBannersSection(),
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Failed to load posts',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _controller.error!,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[500],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () => _controller.refresh(),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

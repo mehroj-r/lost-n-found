@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+<<<<<<< HEAD
 import '../../../core/di/service_locator.dart';
+=======
+>>>>>>> mobile
 import '../../../data/models/user.dart';
 import '../../../data/models/post.dart';
 import '../../../shared/widgets/postWidget.dart';
@@ -45,6 +48,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     super.dispose();
   }
 
+<<<<<<< HEAD
   String _getFullName(AppUser user) {
     final parts = <String>[];
     if (user.firstName.isNotEmpty && user.firstName != '.') {
@@ -60,6 +64,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
     return fullName.isNotEmpty ? fullName : (user.username.isNotEmpty ? user.username : 'User');
   }
 
+=======
+>>>>>>> mobile
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -150,8 +156,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     
                     // Posts List
                     _buildPostsList(context, colorScheme),
+<<<<<<< HEAD
                     
                     const SizedBox(height: 100), // Bottom padding for navbar
+=======
+>>>>>>> mobile
                   ],
                 ),
               ),
@@ -314,6 +323,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
+<<<<<<< HEAD
+=======
+  String _getFullName(AppUser user) {
+    final parts = <String>[];
+    if (user.firstName.isNotEmpty && user.firstName != '.') {
+      parts.add(user.firstName);
+    }
+    if (user.lastName.isNotEmpty && user.lastName != '.') {
+      parts.add(user.lastName);
+    }
+    if (user.patronymic != null && user.patronymic!.isNotEmpty && user.patronymic != '.') {
+      parts.add(user.patronymic!);
+    }
+    final fullName = parts.join(' ');
+    return fullName.isNotEmpty ? fullName : (user.username.isNotEmpty ? user.username : 'User');
+  }
+
+>>>>>>> mobile
   Widget _buildProfileInfo(
     BuildContext context,
     AppUser user,
@@ -607,10 +634,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
         return PostWidget(
           post: post,
           onTap: () {
+<<<<<<< HEAD
             context.push('/posts/${post.id}', extra: post);
           },
           onLikeToggle: (isLiked) {
             // Handle like toggle if needed
+=======
+            // Navigate to post detail if needed
+            if (context.mounted) {
+              // TODO: Navigate to post detail
+            }
+          },
+          onLikeToggle: (isLiked) {
+            // Handle like toggle
+>>>>>>> mobile
           },
         );
       }).toList(),

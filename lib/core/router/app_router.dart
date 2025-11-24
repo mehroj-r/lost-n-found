@@ -15,6 +15,8 @@ import '../../features/chat/chat_screen.dart';
 import '../../features/chat_list/chat_list_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
 import '../../features/profile/view/edit_profile.dart';
+import '../../features/user_profile/view/user_profile_page.dart';
+import '../../data/models/user.dart';
 import 'page_transitions.dart';
 import 'navigation_history.dart';
 
@@ -217,6 +219,34 @@ GoRouter buildRouter(AuthCubit authCubit) {
             MainScaffold(
               currentPath: '/profile',
               child: UploadPage(postId: postId),
+            ),
+            state: state,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/user-profile',
+        pageBuilder: (context, state) {
+          final args = state.extra as Map<String, dynamic>?;
+          final userId = args?['userId'] as int?;
+          final user = args?['user'] as AppUser?;
+          
+          if (userId == null) {
+            return PageTransitions.slideFromRight(
+              Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: const Center(
+                  child: Text('Invalid user ID'),
+                ),
+              ),
+              state: state,
+            );
+          }
+          
+          return PageTransitions.slideFromRight(
+            UserProfilePage(
+              userId: userId,
+              initialUser: user,
             ),
             state: state,
           );

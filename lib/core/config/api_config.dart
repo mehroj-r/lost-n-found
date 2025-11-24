@@ -31,8 +31,8 @@ class ApiConfig {
   
   // Chat Endpoints
   static const String chatCreate = '/posts/'; // + {post_id}/message/
-  static const String chatMessages = '/chats/'; // + {chat_id}/messages
-  static const String chatSendMessage = '/chats/'; // + {chat_id}/message
+  static const String chatMessages = '/chats/'; // + {chat_id}/messages/
+  static const String chatSendMessage = '/chats/'; // + {chat_id}/messages/
   static const String chatsList = '/chats/';
   static const String chatGet = '/chats/'; // + {chat_id}
   
