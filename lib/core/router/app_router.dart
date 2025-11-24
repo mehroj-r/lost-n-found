@@ -19,7 +19,9 @@ import 'page_transitions.dart';
 import 'navigation_history.dart';
 
 import 'package:lost_n_found/data/models/post.dart';
-import 'package:lost_n_found/features/posts/view/post_detail_page.dart';
+import '../../features/posts/view/post_details_page.dart';
+import '../../features/user_profile/view/user_profile_page.dart';
+import '../../data/models/user.dart';
 
 
 GoRouter buildRouter(AuthCubit authCubit) {
@@ -133,9 +135,25 @@ GoRouter buildRouter(AuthCubit authCubit) {
       ),
       GoRoute(
         path: '/posts/:id',
-        builder: (context, state) {
-          final post = state.extra as Post;
-          return PostDetailPage(post: post);
+        pageBuilder: (context, state) {
+          final post = state.extra as Post?;
+          
+          if (post == null) {
+            return PageTransitions.slideFromRight(
+              Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: const Center(
+                  child: Text('Post not found'),
+                ),
+              ),
+              state: state,
+            );
+          }
+          
+          return PageTransitions.slideFromRight(
+            PostDetailPage(post: post),
+            state: state,
+          );
         },
       ),
       GoRoute(
@@ -225,6 +243,33 @@ GoRouter buildRouter(AuthCubit authCubit) {
           
           return PageTransitions.slideFromRight(
             ChatScreen(postId: postId, chatId: chatId),
+            state: state,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/user-profile/:userId',
+        pageBuilder: (context, state) {
+          final userId = int.tryParse(state.pathParameters['userId'] ?? '');
+          final user = state.extra as AppUser?;
+          
+          if (userId == null) {
+            return PageTransitions.slideFromRight(
+              Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: const Center(
+                  child: Text('Invalid user ID'),
+                ),
+              ),
+              state: state,
+            );
+          }
+          
+          return PageTransitions.slideFromRight(
+            UserProfilePage(
+              userId: userId,
+              initialUser: user,
+            ),
             state: state,
           );
         },
