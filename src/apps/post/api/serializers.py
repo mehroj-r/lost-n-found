@@ -27,9 +27,9 @@ class PostSerializer(serializers.ModelSerializer):
         ]
 
         extra_kwargs = {
-            'photo': {'required': True, 'allow_null': False, 'allow_blank': False},
+            'photo': {'required': True, 'allow_null': False},
             'tags': {'required': False},
-            'location': {'required': True, 'allow_null': False, 'allow_blank': False},
+            'location': {'required': True, 'allow_null': False},
             'like_count': {'read_only': True},
             'is_liked': {'read_only': True},
             'created_at': {'read_only': True},

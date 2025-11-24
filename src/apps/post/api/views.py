@@ -21,7 +21,7 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
         type = self.request.query_params.get('type', None)
         user_id = self.request.query_params.get('user_id', None)
 
-        self.queryset = self.queryset.select_related('author')
+        self.queryset = self.queryset.select_related('author').order_by('like_count', '-created_at')
 
         # User filtering
         if user_id:
