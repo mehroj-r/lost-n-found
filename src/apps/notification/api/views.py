@@ -27,7 +27,7 @@ class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
                 default=False,
                 output_field=BooleanField()
             )
-        ).order_by('-created_at')
+        ).order_by('-created_at').distinct()
         return super().list(request, *args, **kwargs)
 
 
