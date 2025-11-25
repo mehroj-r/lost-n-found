@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.account.models import User
+from apps.file.api.serializers import FileSerializer
 from apps.file.models import File
 
 
@@ -18,9 +19,21 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    avatar = FileSerializer(source='profile.avatar', read_only=True)
+
     class Meta:
         model = User
-        fields = ("id", "phone", "username", "email", "first_name", "last_name", "patronymic", 'gender')
+        fields = [
+            "id",
+            'avatar',
+            "phone",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "patronymic",
+            'gender'
+        ]
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
