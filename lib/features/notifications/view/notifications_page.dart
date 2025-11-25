@@ -101,22 +101,66 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text(
           'Notifications',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
           ),
         ),
+        backgroundColor: const Color(0xFFF5F7FA),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/home'),
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.arrow_back_ios_rounded,
+              size: 18,
+              color: Color(0xFF6B7280),
+            ),
+          ),
         ),
         actions: [
           if (notifications.any((n) => !n.isRead))
-            TextButton(
-              onPressed: _markAllAsRead,
-              child: const Text('Mark all read'),
+            Container(
+              margin: const EdgeInsets.only(right: 16),
+              child: TextButton.icon(
+                onPressed: _markAllAsRead,
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF3B82F6),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.done_all, size: 16),
+                label: const Text(
+                  'Mark all read',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
         ],
       ),
@@ -168,51 +212,95 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
     if (notifications.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+        child: Container(
+          margin: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(
-                Icons.notifications_none,
-                size: 64,
-                color: Colors.grey[600],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.blue[100]!,
+                      Colors.purple[100]!,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.notifications_none_rounded,
+                  size: 40,
+                  color: Colors.blue[600],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'No notifications yet',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w600,
+              const SizedBox(height: 24),
+              Text(
+                'No notifications yet',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.grey[800],
+                  letterSpacing: -0.3,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'You\'ll see notifications here when\nsomeone interacts with your posts',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
+              const SizedBox(height: 12),
+              Text(
+                'You\'ll see notifications here when\nsomeone interacts with your posts',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey[600],
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            TextButton(
-              onPressed: () => context.go('/home'),
-              child: const Text('Back to Home'),
-            ),
-          ],
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.go('/home'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3B82F6),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Back to Home',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     return RefreshIndicator(
       onRefresh: _refreshNotifications,
+      color: const Color(0xFF3B82F6),
+      backgroundColor: Colors.white,
+      strokeWidth: 2.5,
       child: ListView.builder(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 116), // Increased bottom padding for navbar
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
         itemCount: notifications.length,
         itemBuilder: (context, index) {
           final notification = notifications[index];
@@ -223,167 +311,191 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Widget _buildNotificationCard(NotificationModel notification) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: notification.isRead ? 1 : 3,
-      shape: RoundedRectangleBorder(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        side: notification.isRead 
-            ? BorderSide.none 
-            : BorderSide(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
+        border: Border.all(
+          color: notification.isRead 
+              ? Colors.transparent
+              : const Color(0xFF3B82F6),
+          width: notification.isRead ? 0 : 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: notification.isRead ? 0.04 : 0.08),
+            blurRadius: notification.isRead ? 6 : 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      color: notification.isRead 
-          ? null 
-          : Theme.of(context).primaryColor.withValues(alpha: 0.03),
-      child: InkWell(
-        onTap: () => _markNotificationAsRead(notification.id),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: notification.isRead 
-              ? null 
-              : BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).primaryColor.withValues(alpha: 0.02),
-                      Theme.of(context).primaryColor.withValues(alpha: 0.05),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: notification.isRead 
-                          ? Colors.grey.withValues(alpha: 0.15)
-                          : Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: notification.isRead 
-                          ? null 
-                          : [
-                              BoxShadow(
-                                color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _markNotificationAsRead(notification.id),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon container
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: notification.isRead 
+                        ? null
+                        : LinearGradient(
+                            colors: [
+                              const Color(0xFF3B82F6),
+                              const Color(0xFF1D4ED8),
                             ],
-                    ),
-                    child: Icon(
-                      notification.isRead 
-                          ? Icons.notifications_outlined 
-                          : Icons.notifications_active,
-                      color: notification.isRead 
-                          ? Colors.grey[600]
-                          : Theme.of(context).primaryColor,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                notification.title,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: notification.isRead 
-                                      ? FontWeight.w500 
-                                      : FontWeight.w700,
-                                  color: notification.isRead 
-                                      ? Colors.grey[700]
-                                      : Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                            if (!notification.isRead) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, 
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).primaryColor,
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                                child: const Text(
-                                  'NEW',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.access_time,
-                              size: 14,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _formatDate(notification.createdAt),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                                fontWeight: notification.isRead 
-                                    ? FontWeight.normal 
-                                    : FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.only(left: 54),
-                child: Text(
-                  notification.message,
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.5,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                     color: notification.isRead 
-                        ? Colors.grey[600] 
-                        : Theme.of(context).colorScheme.onSurface,
-                    fontWeight: notification.isRead 
-                        ? FontWeight.normal 
-                        : FontWeight.w400,
+                        ? Colors.grey[100]
+                        : null,
+                    shape: BoxShape.circle,
+                    boxShadow: notification.isRead 
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                  ),
+                  child: Icon(
+                    notification.isRead 
+                        ? Icons.notifications_outlined 
+                        : Icons.notifications_active_rounded,
+                    color: notification.isRead 
+                        ? Colors.grey[600]
+                        : Colors.white,
+                    size: 22,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 16),
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title and NEW badge
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              notification.title,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: notification.isRead 
+                                    ? FontWeight.w500 
+                                    : FontWeight.w700,
+                                color: notification.isRead 
+                                    ? const Color(0xFF374151)
+                                    : const Color(0xFF111827),
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ),
+                          if (!notification.isRead) ...[
+                            const SizedBox(width: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8, 
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFEF4444),
+                                    Color(0xFFDC2626),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                'NEW',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Message
+                      Text(
+                        notification.message,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.4,
+                          color: notification.isRead 
+                              ? const Color(0xFF6B7280) 
+                              : const Color(0xFF374151),
+                          fontWeight: notification.isRead 
+                              ? FontWeight.w400 
+                              : FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Time
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: notification.isRead 
+                                  ? Colors.grey[200]
+                                  : const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.access_time_rounded,
+                              size: 12,
+                              color: notification.isRead 
+                                  ? Colors.grey[500]
+                                  : const Color(0xFF3B82F6),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _formatDate(notification.createdAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: notification.isRead 
+                                  ? Colors.grey[500]
+                                  : const Color(0xFF6B7280),
+                              fontWeight: notification.isRead 
+                                  ? FontWeight.w400 
+                                  : FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -395,11 +507,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final difference = now.difference(dateTime);
 
     if (difference.inDays > 0) {
-      return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
+      if (difference.inDays == 1) {
+        return 'Yesterday';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} days ago';
+      } else {
+        final weeks = (difference.inDays / 7).floor();
+        return '$weeks week${weeks == 1 ? '' : 's'} ago';
+      }
     } else if (difference.inHours > 0) {
-      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+      return '${difference.inHours}h ago';
     } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+      return '${difference.inMinutes}m ago';
     } else {
       return 'Just now';
     }
