@@ -8,6 +8,7 @@ import '../../features/home/view/home_page.dart';
 import '../../features/my_posts/view/my_posts.dart';
 import '../../features/profile/view/profile_page.dart';
 import '../../features/search/view/search_page.dart';
+import '../../features/settings/view/SettingsPage.dart';
 import '../../features/upload/view/upload_page.dart';
 import '../../features/splash/view/splash_page.dart';
 import '../../features/notifications/view/notifications_page.dart';
@@ -84,6 +85,10 @@ GoRouter buildRouter(AuthCubit authCubit) {
           const RegisterPage(),
           state: state,
         ),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsPage(),
       ),
       
       // Bottom navigation routes with proper transitions
