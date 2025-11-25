@@ -194,7 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         icon: Icons.settings_outlined,
                         title: 'Settings',
                         onTap: () {
-                          // TODO
+                          context.push('/settings'); // define this route in go_router
                         },
                       ),
                       _menuItem(
