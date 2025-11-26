@@ -20,10 +20,7 @@ class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
             Q(users=request.user) | Q(broadcast_type=NotificationBroadcast.ALL)
         ).annotate(
             is_read=Case(
-                When(
-                    Q(notificationuser__user=request.user, notificationuser__is_read=True),
-                    then=True
-                ),
+                When(notificationuser__user=request.user, then='notificationuser__is_read'),
                 default=False,
                 output_field=BooleanField()
             )
