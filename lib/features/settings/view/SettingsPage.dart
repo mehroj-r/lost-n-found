@@ -111,10 +111,7 @@ class _SettingsPageState extends State<SettingsPage> {
             title: const Text('Change password'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO: navigate to change-password screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Change password coming soon')),
-              );
+              context.push('/change-password');
             },
           ),
           ListTile(

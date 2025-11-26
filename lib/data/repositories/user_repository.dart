@@ -9,6 +9,7 @@ abstract class IUserRepository {
   Future<AppUser> getCurrentUser();
   Future<AppUser> updateProfile(Map<String, dynamic> data);
   Future<String> uploadAvatar(File file);
+  Future<void> changePassword(String password);
 }
 
 class UserRepository implements IUserRepository {
@@ -87,5 +88,16 @@ class UserRepository implements IUserRepository {
     return id.toString();
   }
 
+  @override
+  Future<void> changePassword(String password) async {
+    final response = await dioClient.patch(
+      '/users/profile/',
+      data: {'password': password},
+    );
 
+    final status = response.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      throw Exception('Failed to change password: HTTP $status');
+    }
+  }
 }

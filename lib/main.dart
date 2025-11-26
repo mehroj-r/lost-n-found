@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'core/di/service_locator.dart';
+import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
 import 'features/auth/cubit/auth_cubit.dart';
 
@@ -43,6 +44,9 @@ class _FindlyBootstrapState extends State<FindlyBootstrap> {
           throw Exception('Initialization timeout - please check your network connection');
         },
       );
+      
+      // Setup dependency injection
+      setupDependencyInjection();
       
       // Initialize auth cubit and router
       _authCubit = AuthCubit(ServiceLocator().authRepository);
