@@ -14,19 +14,17 @@ class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Notification.objects.all()
 
-
-    def list(self, request, *args, **kwargs):
-        self.queryset = self.get_queryset().filter(
-            Q(users=request.user) | Q(broadcast_type=NotificationBroadcast.ALL)
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(
+            Q(users=self.request.user) | Q(broadcast_type=NotificationBroadcast.ALL)
         ).annotate(
             is_read=Case(
-                When(notificationuser__user=request.user, then='notificationuser__is_read'),
+                When(notificationuser__user=self.request.user, notificationuser__is_read=True, then=True),
                 default=False,
                 output_field=BooleanField()
             )
-        ).order_by('-created_at').distinct()
-        return super().list(request, *args, **kwargs)
-
+        ).order_by('-created_at')
+        return queryset
 
     @action(methods=['GET'], detail=False, url_path='unread-count', url_name='unread_count')
     def unread_count(self, request, *args, **kwargs):
