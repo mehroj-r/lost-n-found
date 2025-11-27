@@ -1,4 +1,4 @@
-from django.db.models import Q, Case, When, BooleanField
+from django.db.models import Q, Case, When, BooleanField, OuterRef, Subquery
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from apps.core.api.views.base import BaseAPIView
 from apps.core.utils.constants import NotificationBroadcast
 from apps.notification.api.serializers import NotificationSerializer
-from apps.notification.models import Notification
+from apps.notification.models import Notification, NotificationUser
 
 
 class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
@@ -15,15 +15,18 @@ class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
     queryset = Notification.objects.all()
 
     def get_queryset(self):
+        read_status = NotificationUser.objects.filter(
+            notification=OuterRef('pk'),
+            user=self.request.user,
+            is_read=True
+        ).values('is_read')[:1]
+
         queryset = super().get_queryset().filter(
             Q(users=self.request.user) | Q(broadcast_type=NotificationBroadcast.ALL)
         ).annotate(
-            is_read=Case(
-                When(notificationuser__user=self.request.user, notificationuser__is_read=True, then=True),
-                default=False,
-                output_field=BooleanField()
-            )
-        ).order_by('-created_at')
+            is_read=Subquery(read_status, output_field=BooleanField())
+        ).order_by('-created_at').distinct()
+
         return queryset
 
     @action(methods=['GET'], detail=False, url_path='unread-count', url_name='unread_count')
