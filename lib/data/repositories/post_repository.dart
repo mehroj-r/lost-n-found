@@ -18,12 +18,30 @@ abstract class IPostRepository {
   Future<List<Post>> searchPosts(String query, {int page = 1, int limit = 20, String? type, DateTime? dateStart, DateTime? dateEnd, String? orderBy});
   Future<void> likePost(int postId);
   Future<void> unlikePost(int postId);
+  Future<List<Post>> getLikedPosts();
 }
 
 class PostRepository implements IPostRepository {
   final DioClient dioClient;
 
   PostRepository({required this.dioClient});
+
+  @override
+  Future<List<Post>> getLikedPosts() async {
+    final response = await dioClient.get('/posts/liked/');
+    final data = response.data;
+    if (data is Map &&
+        data['success'] == true &&
+        data.containsKey('data')) {
+      final List items = data['data'] as List;
+      return items
+          .map((json) => Post.fromJson(json as Map<String, dynamic>))
+          .toList();
+    }
+
+    return [];
+  }
+
 
   @override
   Future<List<Post>> getPosts({int page = 1, int limit = 20, int? userId}) async {
