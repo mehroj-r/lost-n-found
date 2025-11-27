@@ -1,10 +1,11 @@
-from django.db import transaction
 from django.db.models import Q
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.chat.api.serializers import ChatSerializer
+from apps.chat.models import Chat
 from apps.core.api.views.base import BaseAPIView
 from apps.core.utils.constants import PostType
 from apps.post.api.serializers import PostSerializer
@@ -37,7 +38,7 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
 
-    @transaction.atomic
+
     @action(methods=['POST', 'DELETE'], detail=True, url_path='likes', url_name='like_post')
     def like_post(self, request, pk=None):
 
@@ -64,3 +65,38 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
         post.save()
         serializer = self.get_serializer(post)
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['GET'], detail=True, url_path='message', url_name='get_message')
+    def message(self, request, pk=None):
+        post = self.get_object()
+
+        # Prevent creating chat with oneself
+        if post.author == request.user:
+            return Response(
+                {'detail': 'Cannot create chat with yourself.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create or get existing chat between post author and requesting user
+        chat, is_created = Chat.objects.get_or_create(
+            identifier=Chat.generate_identifier(post.id, [post.author.id, request.user.id]),
+            defaults={
+                'name': f"Chat for Post: {post.title}",
+                'post': post,
+            }
+        )
+
+        # Add users to chat if newly created
+        if is_created:
+            chat.users.set(post.author, request.user)
+
+        chat_data = ChatSerializer(chat).data
+        users_data = chat_data.pop('users', [])
+
+        return Response(
+            {
+                'chat': chat_data,
+                'users': users_data,
+            },
+            status=status.HTTP_200_OK
+        )
