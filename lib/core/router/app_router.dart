@@ -5,6 +5,7 @@ import 'package:lost_n_found/features/auth/view/register_page.dart';
 import '../../features/auth/cubit/auth_cubit.dart';
 import '../../features/auth/view/login_page.dart';
 import '../../features/home/view/home_page.dart';
+import '../../features/liked_posts/view/MyFavouritePostsScreen.dart';
 import '../../features/my_posts/view/my_posts.dart';
 import '../../features/profile/view/profile_page.dart';
 import '../../features/search/view/search_page.dart';
@@ -180,6 +181,10 @@ GoRouter buildRouter(AuthCubit authCubit) {
           currentPath: '/profile',
           navigationHistory: navigationHistory,
         ),
+      ),
+      GoRoute(
+        path: '/my-favourites',
+        builder: (context, state) => const MyFavouritePostsScreen(),
       ),
       
       // Detail pages with slide animations

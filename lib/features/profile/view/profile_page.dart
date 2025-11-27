@@ -167,7 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.only(bottom: 100), // Add bottom padding for navbar
+                    padding: const EdgeInsets.only(bottom: 100),
                     children: [
                       _menuItem(
                         icon: Icons.list_alt_outlined,
@@ -177,10 +177,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                       ),
                       _menuItem(
-                        icon: Icons.bookmark_added_outlined,
-                        title: 'My claimed items',
+                        icon: Icons.favorite_border,
+                        title: 'My favourites',
                         onTap: () {
-                          // TODO
+                          context.push('/my-favourites');
                         },
                       ),
                       _menuItem(
@@ -194,7 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         icon: Icons.settings_outlined,
                         title: 'Settings',
                         onTap: () {
-                          context.push('/settings'); // define this route in go_router
+                          context.push('/settings');
                         },
                       ),
                       _menuItem(
