@@ -502,7 +502,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.distancePill,
+              color: AppColors.pillBackground,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: AppColors.divider,

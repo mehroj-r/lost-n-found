@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_dimensions.dart';
+import '../../core/constants/app_typography.dart';
+import '../../features/auth/cubit/auth_cubit.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final TextEditingController? searchController;
-  final String searchHint;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
   final VoidCallback? onSearchTap;
@@ -10,8 +13,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const CustomAppBar({
     super.key,
-    this.searchController,
-    this.searchHint = 'What are you looking for ?',
     this.onNotificationTap,
     this.onProfileTap,
     this.onSearchTap,
@@ -19,196 +20,293 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(120);
+  Size get preferredSize => const Size.fromHeight(70);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.background,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
+            color: AppColors.shadow.withValues(alpha: 0.04),
+            blurRadius: 12,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: SafeArea(
         bottom: false,
-        child: Row(
-          children: [
-            // Search Bar
-            Expanded(
-              child: _SearchField(
-                controller: searchController,
-                hint: searchHint,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppDimensions.spaceL,
+            vertical: AppDimensions.spaceM,
+          ),
+          child: Row(
+            children: [
+              // App Logo/Name
+              _AppLogo(onTap: onSearchTap),
+              
+              const Spacer(),
+
+              // Search Button
+              _ModernIconButton(
+                icon: Icons.search_rounded,
                 onTap: onSearchTap,
+                tooltip: 'Search',
               ),
-            ),
-            const SizedBox(width: 12),
+              SizedBox(width: AppDimensions.spaceM),
 
-            // Notification Button
-            _IconButton(
-              icon: Icons.notifications_outlined,
-              hasIndicator: hasNotifications,
-              onTap: onNotificationTap,
-            ),
-            const SizedBox(width: 12),
+              // Notification Button
+              _ModernIconButton(
+                icon: Icons.notifications_none_rounded,
+                hasIndicator: hasNotifications,
+                onTap: onNotificationTap,
+                tooltip: 'Notifications',
+              ),
+              SizedBox(width: AppDimensions.spaceM),
 
-            // Profile Button
-            _ProfileButton(onTap: onProfileTap),
-          ],
+              // Profile Button
+              _ModernProfileButton(onTap: onProfileTap),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _SearchField extends StatelessWidget {
-  final TextEditingController? controller;
-  final String hint;
+/// Modern app logo/name with gradient
+class _AppLogo extends StatelessWidget {
   final VoidCallback? onTap;
 
-  const _SearchField({
-    this.controller,
-    required this.hint,
-    this.onTap,
-  });
+  const _AppLogo({this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Colors.grey[300]!,
-            width: 1,
-          ),
-        ),
-        child: AbsorbPointer(
-          absorbing: onTap != null, // Disable text field if onTap is provided
-          child: TextField(
-            controller: controller,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Color(0xFF1A1A1A),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // App Icon
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: AppColors.primaryGradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: AppDimensions.borderRadiusM,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: TextStyle(
-                fontSize: 15,
-                color: Colors.grey[500],
-                fontWeight: FontWeight.w400,
-              ),
-              prefixIcon: Icon(
-                Icons.search,
-                color: Colors.grey[600],
-                size: 24,
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
+            child: Icon(
+              Icons.search_rounded,
+              color: AppColors.textWhite,
+              size: 20,
             ),
           ),
-        ),
+          SizedBox(width: AppDimensions.spaceM),
+          // App Name
+          ShaderMask(
+            shaderCallback: (bounds) => LinearGradient(
+              colors: AppColors.primaryGradient,
+            ).createShader(bounds),
+            child: Text(
+              'Findly',
+              style: AppTypography.h3.copyWith(
+                color: AppColors.textWhite,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Reusable icon button with notification indicator
-class _IconButton extends StatelessWidget {
+/// Modern icon button with smooth animations
+class _ModernIconButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback? onTap;
   final bool hasIndicator;
+  final String? tooltip;
 
-  const _IconButton({
+  const _ModernIconButton({
     required this.icon,
     this.onTap,
     this.hasIndicator = false,
+    this.tooltip,
   });
+
+  @override
+  State<_ModernIconButton> createState() => _ModernIconButtonState();
+}
+
+class _ModernIconButtonState extends State<_ModernIconButton> {
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.grey[300]!,
-            width: 1.5,
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: Tooltip(
+        message: widget.tooltip ?? '',
+        child: AnimatedContainer(
+          duration: AppDimensions.animationFast,
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: _isPressed 
+                ? AppColors.primary.withValues(alpha: 0.1)
+                : AppColors.backgroundTertiary,
+            shape: BoxShape.circle,
           ),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(
-              icon,
-              color: const Color(0xFF1A1A1A),
-              size: 24,
-            ),
-            if (hasIndicator)
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFF5252),
-                    shape: BoxShape.circle,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                widget.icon,
+                color: AppColors.textPrimary,
+                size: 22,
+              ),
+              if (widget.hasIndicator)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: AppColors.error,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.background,
+                        width: 2,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Reusable profile button component
-class _ProfileButton extends StatelessWidget {
+/// Modern profile button with user avatar
+class _ModernProfileButton extends StatefulWidget {
   final VoidCallback? onTap;
 
-  const _ProfileButton({this.onTap});
+  const _ModernProfileButton({this.onTap});
+
+  @override
+  State<_ModernProfileButton> createState() => _ModernProfileButtonState();
+}
+
+class _ModernProfileButtonState extends State<_ModernProfileButton> {
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthCubit>().state;
+    final user = authState.user;
+    
+    final initial = user?.firstName.isNotEmpty == true 
+        ? user!.firstName[0].toUpperCase() 
+        : 'U';
+    
+    // Get avatar URL - try avatarUrl first, then avatar.url as fallback
+    final String? avatarUrl = user?.avatarUrl ?? user?.avatar?.url;
+    final bool hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
+    
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.grey[300]!,
-            width: 1.5,
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.9 : 1.0,
+        duration: AppDimensions.animationFast,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: hasAvatar
+                ? Image.network(
+                    avatarUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _buildFallbackAvatar(initial),
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return _buildLoadingAvatar();
+                    },
+                  )
+                : _buildFallbackAvatar(initial),
           ),
         ),
-        child: const Center(
-          child: Text(
-            'M',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: 0,
-            ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackAvatar(String initial) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: AppColors.primaryGradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          initial,
+          style: AppTypography.h5.copyWith(
+            color: AppColors.textWhite,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingAvatar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.backgroundTertiary,
+      ),
+      child: Center(
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
         ),
       ),
