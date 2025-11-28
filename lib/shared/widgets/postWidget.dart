@@ -754,17 +754,18 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
         context.go('/chat', extra: {'postId': widget.post.id});
       },
       child: Container(
-        padding: const EdgeInsets.all(8),
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(20),
+          shape: BoxShape.circle,
           border: Border.all(
             color: Colors.white.withValues(alpha: 0.3),
           ),
         ),
-        child: Icon(
-          Icons.message_outlined,
-          size: 16,
+        child: const Icon(
+          Icons.message,
+          size: 18,
           color: Colors.white,
         ),
       ),
@@ -995,11 +996,12 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
         onTap: () {
           context.go('/chat', extra: {'postId': widget.post.id});
         },
-        borderRadius: BorderRadius.circular(24),
+        customBorder: const CircleBorder(),
         splashColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
         highlightColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -1009,48 +1011,19 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(24),
+            shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-                spreadRadius: -1,
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-                spreadRadius: -2,
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.forum_rounded,
-                  size: 14,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Message',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
+          child: const Icon(
+            Icons.message,
+            size: 20,
+            color: Colors.white,
           ),
         ),
       ),

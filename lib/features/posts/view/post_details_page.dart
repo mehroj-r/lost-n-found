@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:photo_view/photo_view.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/post.dart';
@@ -66,6 +67,19 @@ class _PostDetailPageState extends State<PostDetailPage> {
     context.push('/chat', extra: {
       'postId': _post.id,
     });
+  }
+
+  void _openImageViewer() {
+    if (_post.photo?.url == null || _post.photo!.url.isEmpty) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => _ImageViewerPage(
+          imageUrl: _post.photo!.url,
+          title: _post.title,
+        ),
+      ),
+    );
   }
 
   Future<void> _toggleLike() async {
@@ -135,14 +149,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       _buildTagsCard(),
                       const SizedBox(height: 16),
                     ],
-                    if (_canMessage) _buildActionCard(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
             ),
           ],
         ),
+        floatingActionButton: _canMessage ? _buildMessageButton() : null,
       ),
     );
   }
@@ -174,96 +188,64 @@ class _PostDetailPageState extends State<PostDetailPage> {
         ),
       ),
       flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            _post.photo?.url != null && _post.photo!.url.isNotEmpty
-                ? Image.network(
-                    _post.photo!.url,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        _buildPlaceholder(statusColor),
-                  )
-                : _buildPlaceholder(statusColor),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.7),
-                  ],
-                  stops: const [0.5, 1.0],
+        background: GestureDetector(
+          onTap: _openImageViewer,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _post.photo?.url != null && _post.photo!.url.isNotEmpty
+                  ? Hero(
+                      tag: 'post-image-${_post.id}',
+                      child: Image.network(
+                        _post.photo!.url,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildPlaceholder(statusColor),
+                      ),
+                    )
+                  : _buildPlaceholder(statusColor),
+              IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.7),
+                      ],
+                      stops: const [0.5, 1.0],
+                    ),
+                  ),
                 ),
               ),
-            ),
             Positioned(
               bottom: 80,
               left: 20,
               right: 20,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: statusColor.withValues(alpha: 0.4),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _post.isCompleted
-                              ? Icons.check_circle_rounded
-                              : (_post.type == 'lost'
-                                  ? Icons.search_rounded
-                                  : Icons.location_on_rounded),
-                          size: 18,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _post.isCompleted
-                              ? 'RESOLVED'
-                              : (_post.type == 'lost' ? 'LOST ITEM' : 'FOUND ITEM'),
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: 1.2,
+              child: IgnorePointer(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _post.title,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        height: 1.2,
+                        letterSpacing: -0.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black45,
+                            offset: Offset(0, 2),
+                            blurRadius: 8,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _post.title,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      height: 1.2,
-                      letterSpacing: -0.5,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black45,
-                          offset: Offset(0, 2),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             Positioned(
@@ -331,7 +313,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -430,22 +413,23 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: _post.isLiked
-                            ? Colors.red.shade50
-                            : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
+                    InkWell(
+                      onTap: _likeInProgress ? null : _toggleLike,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
                           color: _post.isLiked
-                              ? Colors.red.shade200
-                              : Colors.grey.shade300,
-                          width: 2,
+                              ? Colors.red.shade50
+                              : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _post.isLiked
+                                ? Colors.red.shade200
+                                : Colors.grey.shade300,
+                            width: 2,
+                          ),
                         ),
-                      ),
-                      child: InkWell(
-                        onTap: _likeInProgress ? null : _toggleLike,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -593,40 +577,106 @@ class _PostDetailPageState extends State<PostDetailPage> {
     );
   }
 
-  Widget _buildActionCard() {
+  Widget _buildMessageButton() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: ElevatedButton(
+      margin: const EdgeInsets.only(bottom: 20, right: 4),
+      child: FloatingActionButton(
         onPressed: _openChat,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 2,
-          shadowColor: AppColors.primary.withValues(alpha: 0.3),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.chat_bubble_outline_rounded, size: 20),
-            SizedBox(width: 10),
-            Text(
-              'Send Message',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ],
+        backgroundColor: AppColors.primary,
+        elevation: 4,
+        child: const Icon(
+          Icons.chat_bubble_outline_rounded,
+          color: Colors.white,
+          size: 28,
         ),
       ),
     );
   }
+}
 
+class _ImageViewerPage extends StatelessWidget {
+  final String imageUrl;
+  final String title;
 
+  const _ImageViewerPage({
+    required this.imageUrl,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.5),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            shadows: [
+              Shadow(
+                color: Colors.black54,
+                blurRadius: 4,
+              ),
+            ],
+          ),
+        ),
+      ),
+      body: Hero(
+        tag: 'post-image-${imageUrl.hashCode}',
+        child: PhotoView(
+          imageProvider: NetworkImage(imageUrl),
+          minScale: PhotoViewComputedScale.contained,
+          maxScale: PhotoViewComputedScale.covered * 3,
+          initialScale: PhotoViewComputedScale.contained,
+          backgroundDecoration: const BoxDecoration(
+            color: Colors.black,
+          ),
+          loadingBuilder: (context, event) => Center(
+            child: CircularProgressIndicator(
+              value: event == null
+                  ? 0
+                  : event.cumulativeBytesLoaded / (event.expectedTotalBytes ?? 1),
+              color: AppColors.primary,
+            ),
+          ),
+          errorBuilder: (context, error, stackTrace) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.grey[600],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load image',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
