@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lost_n_found/features/auth/view/register_page.dart';
 import '../../features/auth/cubit/auth_cubit.dart';
 import '../../features/auth/view/login_page.dart';
+import '../../features/faq_page/view/faq_page.dart';
 import '../../features/home/view/home_page.dart';
 import '../../features/liked_posts/view/MyFavouritePostsScreen.dart';
 import '../../features/my_posts/view/my_posts.dart';
@@ -185,6 +186,10 @@ GoRouter buildRouter(AuthCubit authCubit) {
       GoRoute(
         path: '/my-favourites',
         builder: (context, state) => const MyFavouritePostsScreen(),
+      ),
+      GoRoute(
+        path: '/faq',
+        builder: (context, state) => const FaqPage(),
       ),
       
       // Detail pages with slide animations
