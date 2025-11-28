@@ -90,7 +90,7 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
         if is_created:
             chat.users.set([post.author, request.user])
 
-        chat_data = ChatSerializer(chat).data
+        chat_data = ChatSerializer(chat, context={'request': request}).data
         users_data = chat_data.pop('users', [])
 
         return Response(
