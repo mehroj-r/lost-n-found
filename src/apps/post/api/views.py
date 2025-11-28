@@ -88,7 +88,7 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
 
         # Add users to chat if newly created
         if is_created:
-            chat.users.set(post.author, request.user)
+            chat.users.set([post.author, request.user])
 
         chat_data = ChatSerializer(chat).data
         users_data = chat_data.pop('users', [])
