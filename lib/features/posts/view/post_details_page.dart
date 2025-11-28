@@ -119,231 +119,213 @@ class _PostDetailPageState extends State<PostDetailPage> {
     return BlocProvider(
       create: (context) => PostDetailCubit(ServiceLocator().postRepository),
       child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Stack(
+        backgroundColor: const Color(0xFFF8F9FA),
+        extendBodyBehindAppBar: true,
+        body: CustomScrollView(
+          slivers: [
+            _buildSliverAppBar(statusColor),
+            SliverToBoxAdapter(
+              child: Container(
+                color: const Color(0xFFF8F9FA),
+                child: Column(
+                  children: [
+                    _buildContentCard(statusColor),
+                    const SizedBox(height: 16),
+                    if (_post.tags.isNotEmpty) ...[
+                      _buildTagsCard(),
+                      const SizedBox(height: 16),
+                    ],
+                    if (_canMessage) _buildActionCard(),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSliverAppBar(Color statusColor) {
+    return SliverAppBar(
+      expandedHeight: 400,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: AppColors.primary,
+      leading: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.3),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            color: Colors.white,
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
+          ),
+        ),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
           children: [
-            // Top image section
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 340,
-              child: Stack(
-                children: [
-                  // Image
-                  _post.photo?.url != null && _post.photo!.url.isNotEmpty
-                      ? Image.network(
+            _post.photo?.url != null && _post.photo!.url.isNotEmpty
+                ? Image.network(
                     _post.photo!.url,
                     fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
                     errorBuilder: (context, error, stackTrace) =>
                         _buildPlaceholder(statusColor),
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return _buildPlaceholder(statusColor);
-                    },
                   )
-                      : _buildPlaceholder(statusColor),
-
-                  // Gradient overlay
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 120,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.6),
-                          ],
+                : _buildPlaceholder(statusColor),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.7),
+                  ],
+                  stops: const [0.5, 1.0],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 80,
+              left: 20,
+              right: 20,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: statusColor.withValues(alpha: 0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-
-                  // Back button - top left corner
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    child: SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              if (context.canPop()) {
-                                context.pop();
-                              } else {
-                                context.go('/home');
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.5),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _post.isCompleted
+                              ? Icons.check_circle_rounded
+                              : (_post.type == 'lost'
+                                  ? Icons.search_rounded
+                                  : Icons.location_on_rounded),
+                          size: 18,
+                          color: Colors.white,
                         ),
-                      ),
-                    ),
-                  ),
-
-                  // Author avatar - clickable
-                  Positioned(
-                    left: 20,
-                    bottom: 32,
-                    child: GestureDetector(
-                      onTap: _openAuthorProfile,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 3,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: CircleAvatar(
-                          radius: 26,
-                          backgroundColor: Colors.white,
-                          child: CircleAvatar(
-                            radius: 23,
-                            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                            backgroundImage: _post.author.avatar?.url != null &&
-                                _post.author.avatar!.url.isNotEmpty
-                                ? NetworkImage(_post.author.avatar!.url)
-                                : null,
-                            child: _post.author.avatar?.url == null ||
-                                _post.author.avatar!.url.isEmpty
-                                ? Text(
-                              _getAuthorInitial(),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                color: AppColors.primary,
-                              ),
-                            )
-                                : null,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Author name below avatar
-                  Positioned(
-                    left: 20,
-                    bottom: 8,
-                    child: GestureDetector(
-                      onTap: _openAuthorProfile,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          '${_post.author.firstName} ${_post.author.lastName}',
+                        const SizedBox(width: 8),
+                        Text(
+                          _post.isCompleted
+                              ? 'RESOLVED'
+                              : (_post.type == 'lost' ? 'LOST ITEM' : 'FOUND ITEM'),
                           style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.2,
                           ),
                         ),
-                      ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _post.title,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      height: 1.2,
+                      letterSpacing: -0.5,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black45,
+                          offset: Offset(0, 2),
+                          blurRadius: 8,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-
-            // White rounded detail sheet
             Positioned(
-              left: 0,
-              right: 0,
-              top: 340,
-              bottom: 0,
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(32),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 20,
-                      offset: Offset(0, -4),
+              bottom: 20,
+              left: 20,
+              child: GestureDetector(
+                onTap: _openAuthorProfile,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      width: 1,
                     ),
-                  ],
-                ),
-                child: SafeArea(
-                  top: false,
-                  child: Stack(
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _titleRow(statusColor),
-                            const SizedBox(height: 16),
-                            _infoRow(),
-                            const SizedBox(height: 20),
-                            const Divider(color: AppColors.divider, height: 1),
-                            const SizedBox(height: 20),
-                            _descriptionSection(),
-                            const SizedBox(height: 24),
-                            if (_post.tags.isNotEmpty) ...[
-                              _categorySection(),
-                              const SizedBox(height: 24),
-                            ],
-                            _locationAndMessageRow(context, _canMessage),
-                            const SizedBox(height: 24),
-                            _homeIndicator(),
-                          ],
-                        ),
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: Colors.white,
+                        backgroundImage: _post.author.avatar?.url != null &&
+                                _post.author.avatar!.url.isNotEmpty
+                            ? NetworkImage(_post.author.avatar!.url)
+                            : null,
+                        child: _post.author.avatar?.url == null ||
+                                _post.author.avatar!.url.isEmpty
+                            ? Text(
+                                _getAuthorInitial(),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            : null,
                       ),
-                      if (_loadingDetails)
-                        const Positioned.fill(
-                          child: IgnorePointer(
-                            ignoring: true,
-                            child: Center(
-                              child: CircularProgressIndicator(),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${_post.author.firstName} ${_post.author.lastName}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ),
+                          Text(
+                            _getTimeAgo(),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -357,356 +339,294 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   Widget _buildPlaceholder(Color statusColor) {
     return Container(
-      color: statusColor.withValues(alpha: 0.1),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            statusColor.withValues(alpha: 0.2),
+            statusColor.withValues(alpha: 0.05),
+          ],
+        ),
+      ),
       child: Center(
         child: Icon(
           _post.type == 'lost' ? Icons.search_rounded : Icons.location_on_rounded,
-          size: 64,
-          color: statusColor,
+          size: 80,
+          color: statusColor.withValues(alpha: 0.5),
         ),
       ),
     );
   }
 
-  Widget _titleRow(Color statusColor) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _post.title,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        height: 1.2,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Status badge - moved here next to title
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: statusColor.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _post.isCompleted
-                              ? Icons.check_circle_rounded
-                              : (_post.type == 'lost'
-                              ? Icons.search_rounded
-                              : Icons.location_on_rounded),
-                          size: 14,
-                          color: statusColor,
+  Widget _buildContentCard(Color statusColor) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          _post.isCompleted
-                              ? 'Resolved'
-                              : (_post.type == 'lost' ? 'Lost' : 'Found'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: statusColor,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary.withValues(alpha: 0.1),
+                              AppColors.primary.withValues(alpha: 0.05),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.2),
+                            width: 1,
                           ),
                         ),
-                      ],
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.location_on_rounded,
+                              size: 20,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              child: Text(
+                                _post.location.isNotEmpty
+                                    ? _post.location
+                                    : 'Location not specified',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.access_time_rounded,
-                    size: 16,
-                    color: AppColors.textMuted,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    _getTimeAgo(),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textMuted,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _post.isLiked
+                            ? Colors.red.shade50
+                            : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _post.isLiked
+                              ? Colors.red.shade200
+                              : Colors.grey.shade300,
+                          width: 2,
+                        ),
+                      ),
+                      child: InkWell(
+                        onTap: _likeInProgress ? null : _toggleLike,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _post.isLiked
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              color: _post.isLiked ? Colors.red : Colors.grey.shade600,
+                              size: 22,
+                            ),
+                            if (_post.likeCount > 0) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                '${_post.likeCount}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: _post.isLiked ? Colors.red : Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Like button
-        Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: _post.isLiked
-                    ? Colors.red.shade50
-                    : AppColors.chipBackground,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                onPressed: _likeInProgress ? null : _toggleLike,
-                icon: Icon(
-                  _post.isLiked
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  color: _post.isLiked ? Colors.red : AppColors.textMuted,
-                  size: 28,
+                  ],
                 ),
-              ),
-            ),
-            if (_post.likeCount > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  '${_post.likeCount}',
+                const SizedBox(height: 24),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.3)],
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Description',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _post.isLiked ? Colors.red : AppColors.textMuted,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.3,
                   ),
                 ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _infoRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.pillBackground,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppColors.divider,
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.location_on_rounded,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    _post.location.isNotEmpty ? _post.location : 'Not specified',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 12),
+                Text(
+                  _post.description,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.7,
+                    color: Colors.grey.shade700,
+                    letterSpacing: 0.1,
                   ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _descriptionSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.description_rounded,
-              size: 20,
-              color: AppColors.primary,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'Description',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Text(
-          _post.description,
-          style: const TextStyle(
-            fontSize: 15,
-            height: 1.6,
-            color: AppColors.textPrimary,
-            letterSpacing: 0.2,
+  Widget _buildTagsCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _categorySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.label_outline_rounded,
-              size: 20,
-              color: AppColors.primary,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'Tags',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _post.tags.map((tag) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.chipBackground,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.divider,
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                tag,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _locationAndMessageRow(BuildContext context, bool canMessage) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              const Text(
-                'Location',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textMuted,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.label_rounded,
+                  size: 20,
+                  color: AppColors.primary,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                _post.location.isNotEmpty ? _post.location : 'Not specified',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
+              const SizedBox(width: 12),
+              const Text(
+                'Tags',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.3,
                 ),
               ),
             ],
           ),
-        ),
-        if (canMessage) ...[
-          const SizedBox(width: 16),
-          Expanded(
-            child: SizedBox(
-              height: 56,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: _post.tags.map((tag) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.1),
+                      AppColors.primary.withValues(alpha: 0.05),
+                    ],
                   ),
-                  elevation: 2,
-                  shadowColor: AppColors.primary.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
                 ),
-                onPressed: _openChat,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: 22,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'MESSAGE',
-                      style: TextStyle(
-                        letterSpacing: 0.8,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  tag,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                    letterSpacing: 0.3,
+                  ),
                 ),
-              ),
-            ),
+              );
+            }).toList(),
           ),
         ],
-      ],
+      ),
     );
   }
 
-  Widget _homeIndicator() {
-    return Center(
-      child: Container(
-        width: 120,
-        height: 4,
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(999),
+  Widget _buildActionCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: ElevatedButton(
+        onPressed: _openChat,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 2,
+          shadowColor: AppColors.primary.withValues(alpha: 0.3),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.chat_bubble_outline_rounded, size: 20),
+            SizedBox(width: 10),
+            Text(
+              'Send Message',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
+
 }
 
