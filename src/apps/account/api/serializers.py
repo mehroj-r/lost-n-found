@@ -37,7 +37,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    bio = serializers.CharField(source='profile.bio')
+    bio = serializers.CharField(source='profile.bio', required=False, allow_null=True)
     fio = serializers.CharField(source='get_full_name')
     avatar = serializers.PrimaryKeyRelatedField(source='profile.avatar', queryset=File.objects.all())
 
