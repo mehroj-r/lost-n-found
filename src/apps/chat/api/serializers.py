@@ -26,6 +26,7 @@ class ChatSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True, default=CurrentUserDefault())
+    display_type = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
@@ -34,14 +35,17 @@ class MessageSerializer(serializers.ModelSerializer):
             'chat',
             'sender',
             'content',
-            'sent_at',
+            'display_type',
             'created_at',
         ]
 
         extra_kwargs = {
             'chat': {'write_only': True},
             'content': {'required': True},
-            'sent_at': {'read_only': True},
             'created_at': {'read_only': True},
         }
+
+    def get_display_type(self, obj):
+        user = self.context['request'].user
+        return 'outgoing' if obj.sender == user else 'incoming'
 

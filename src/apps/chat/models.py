@@ -18,6 +18,10 @@ class Chat(TimestampedModel):
         sorted_user_ids = sorted(user_ids)
         return f"chat_{post_id}_" + "_".join(map(str, sorted_user_ids))
 
+    @property
+    def last_message(self):
+        return self.messages.order_by('-created_at').first()
+
 class ChatUser(models.Model):
     chat = models.ForeignKey(to=Chat, on_delete=models.CASCADE, related_name="chat_users")
     user = models.ForeignKey(to="account.User", on_delete=models.CASCADE, related_name="user_chats")
@@ -34,7 +38,6 @@ class Message(TimestampedModel):
     chat = models.ForeignKey(to=Chat, on_delete=models.CASCADE, related_name="messages")
     sender = models.ForeignKey(to="account.User", on_delete=models.CASCADE, related_name="sent_messages")
     content = models.TextField()
-    sent_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Message from {self.sender.get_full_name()} at {self.sent_at}"
+        return f"Message from {self.sender.get_full_name()} at {self.created_at}"
