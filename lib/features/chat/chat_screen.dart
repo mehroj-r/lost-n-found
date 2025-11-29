@@ -102,7 +102,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
   }
 
   void _handleBackNavigation() {
-    context.go('/chats');
+    context.go('/chat-list');
   }
 
   @override
