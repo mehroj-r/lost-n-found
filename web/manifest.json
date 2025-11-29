@@ -1,6 +1,6 @@
 {
-    "name": "lost_n_found",
-    "short_name": "lost_n_found",
+    "name": "findly",
+    "short_name": "findly",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

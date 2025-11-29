@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lost_n_found/features/auth/view/register_page.dart';
+import 'package:findly/features/auth/view/register_page.dart';
 import '../../features/auth/cubit/auth_cubit.dart';
 import '../../features/auth/view/login_page.dart';
 import '../../features/faq_page/view/faq_page.dart';
@@ -24,7 +24,7 @@ import '../../data/models/user.dart';
 import 'page_transitions.dart';
 import 'navigation_history.dart';
 
-import 'package:lost_n_found/data/models/post.dart';
+import 'package:findly/data/models/post.dart';
 import '../../features/posts/view/post_details_page.dart';
 import '../../features/user_profile/view/user_profile_page.dart';
 import '../../data/models/user.dart';

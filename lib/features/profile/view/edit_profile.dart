@@ -7,7 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../shared/widgets/app_button.dart';
-import 'package:lost_n_found/shared/widgets/CustomTextField.dart';
+import 'package:findly/shared/widgets/CustomTextField.dart';
 import '../../auth/cubit/auth_cubit.dart';
 import '../controller/edit_profile_controller.dart';
 

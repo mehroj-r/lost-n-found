@@ -1,4 +1,4 @@
-# lost_n_found
+# findly
 
 A new Flutter project.
 

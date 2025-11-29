@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:lost_n_found/shared/widgets/postWidget.dart';
+import 'package:findly/shared/widgets/postWidget.dart';
 import '../controller/MyFavouritePostsController.dart';
 
 class MyFavouritePostsScreen extends StatefulWidget {
