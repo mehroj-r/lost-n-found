@@ -184,10 +184,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                       ),
                       _menuItem(
-                        icon: Icons.location_on_outlined,
-                        title: 'My Address',
+                        icon: Icons.help_outline,
+                        title: 'FAQ',
                         onTap: () {
-                          // TODO
+                          context.push('/faq');
                         },
                       ),
                       _menuItem(
