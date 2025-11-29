@@ -80,7 +80,7 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
 
         # Create or get existing chat between post author and requesting user
         chat, is_created = Chat.objects.get_or_create(
-            identifier=Chat.generate_identifier(post.id, [post.author.id, request.user.id]),
+            id=Chat.generate_id(post.id, [post.author.id, request.user.id]),
             defaults={
                 'name': f"Chat for Post: {post.title}",
                 'post': post,

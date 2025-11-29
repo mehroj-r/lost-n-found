@@ -13,7 +13,7 @@ class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
         fields = [
-            'identifier',
+            'id',
             'post',
             'name',
             'users',
