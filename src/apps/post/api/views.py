@@ -7,7 +7,8 @@ from rest_framework.response import Response
 from apps.chat.api.serializers import ChatSerializer
 from apps.chat.models import Chat
 from apps.core.api.views.base import BaseAPIView
-from apps.core.utils.constants import PostType
+from apps.core.utils.constants import PostType, NotificationType, NotificationBroadcast
+from apps.notification.models import Notification
 from apps.post.api.serializers import PostSerializer
 from apps.post.models import Post
 
@@ -89,6 +90,16 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
         # Add users to chat if newly created
         if is_created:
             chat.users.set([post.author, request.user])
+
+            # Create notification for post author about new chat
+            notification = Notification.objects.create(
+                type=NotificationType.MESSAGE,
+                title=f"New chat for your post",
+                message=f'New chat created for your post "{post.title}".',
+                broadcast_type=NotificationBroadcast.TARGET,
+            )
+            notification.users.set([post.author])
+
 
         chat_data = ChatSerializer(chat, context={'request': request}).data
         post_data = chat_data.pop('post', None)
