@@ -42,9 +42,9 @@ class ChatViewSet(BaseAPIView, viewsets.ModelViewSet):
         chat = self.get_object()
         data = {
             **request.data,
-            chat: chat.id
+            'chat': chat.id
         }
         serializer = MessageSerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        serializer.save(chat=chat, sender=request.user)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
