@@ -40,7 +40,11 @@ class ChatViewSet(BaseAPIView, viewsets.ModelViewSet):
 
     def _create_message(self, request, pk=None):
         chat = self.get_object()
-        serializer = MessageSerializer(data=request.data, context={'request': request})
+        data = {
+            **request.data,
+            chat: chat.id
+        }
+        serializer = MessageSerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save(chat=chat, sender=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
