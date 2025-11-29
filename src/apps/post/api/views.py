@@ -1,3 +1,5 @@
+import datetime
+
 from django.db.models import Q
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
@@ -22,7 +24,15 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
         query = self.request.query_params.get('query', None)
         type = self.request.query_params.get('type', None)
         user_id = self.request.query_params.get('user_id', None)
+        date_start = self.request.query_params.get('date', None) # 2025-12-31
+        date_end = self.request.query_params.get('date_end', None) # 2025-12-31
+        order_by = self.request.query_params.get('order', None) # 'like_count', 'created_at'
 
+        # Convert date strings to datetime objects
+        date_start_obj = datetime.datetime.strptime(date_start, '%Y-%m-%d')
+        date_end_obj = datetime.datetime.strptime(date_end, '%Y-%m-%d')
+
+        # Base queryset with ordering
         self.queryset = self.queryset.select_related('author').order_by('-like_count', '-created_at')
 
         # User filtering
@@ -36,6 +46,16 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
         # Type filtering
         if type and type in PostType.values:
             self.queryset = self.queryset.filter(type=type)
+
+        # Date range filtering
+        if date_start_obj:
+            self.queryset = self.queryset.filter(created_at__date__gte=date_start_obj.date())
+        if date_end_obj:
+            self.queryset = self.queryset.filter(created_at__date__lte=date_end_obj.date())
+
+        # Ordering
+        if order_by in ['like_count', 'created_at']:
+            self.queryset = self.queryset.order_by(f'-{order_by}')
 
         return super().list(request, *args, **kwargs)
 
