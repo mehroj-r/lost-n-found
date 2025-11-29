@@ -6,7 +6,7 @@ from apps.chat.api.views import ChatViewSet
 app_name = 'chat'
 
 router = routers.DefaultRouter()
-router.register('chat', ChatViewSet)
+router.register('', ChatViewSet)
 
 urlpatterns = [
     path('', include(router.urls))

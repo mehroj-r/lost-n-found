@@ -92,12 +92,14 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
             chat.users.set([post.author, request.user])
 
         chat_data = ChatSerializer(chat, context={'request': request}).data
-        users_data = UserSerializer(chat.users.all(), many=True, context={'request': request}).data
+        post_data = chat_data.pop('post', None) if chat_data else None
+        users_data = post_data.pop('users', None) if post_data else None
 
         return Response(
             {
                 'chat': chat_data,
                 'users': users_data,
+                'post': post_data
             },
             status=status.HTTP_200_OK
         )
