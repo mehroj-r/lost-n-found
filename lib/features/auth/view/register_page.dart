@@ -28,6 +28,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _gender;
   bool _obscure = true;
   bool _canSubmit = false;
+  bool _submitted = false;
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _RegisterPageState extends State<RegisterPage> {
     for (final c in [_first, _last, _phone, _email, _password, _confirm, _username, _patronymic]) {
       c.addListener(_recomputeCanSubmit);
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _recomputeCanSubmit());
   }
 
   @override
@@ -89,14 +91,24 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _onSubmit() {
+    setState(() => _submitted = true);
     if (!_formKey.currentState!.validate()) return;
     if (_password.text != _confirm.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Passwords do not match')),
+        );
+      }
       return;
     }
-
+    if (_gender == null || _gender!.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select gender')),
+        );
+      }
+      return;
+    }
     context.read<AuthCubit>().register(
       firstName: _first.text.trim(),
       lastName: _last.text.trim().isEmpty ? null : _last.text.trim(),
@@ -142,16 +154,18 @@ class _RegisterPageState extends State<RegisterPage> {
                   context.go('/login');
                 }
               } else if (state.error != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.error!),
-                    backgroundColor: AppColors.error,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: AppDimensions.borderRadiusM,
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.error!),
+                      backgroundColor: AppColors.error,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: AppDimensions.borderRadiusM,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                }
               }
             },
             builder: (ctx, state) {
@@ -174,7 +188,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           ],
                         ),
                         SizedBox(height: AppDimensions.spaceM),
-
                         Hero(
                           tag: 'logo',
                           child: Container(
@@ -205,7 +218,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         SizedBox(height: AppDimensions.spaceXxl),
-
                         Text(
                           'Create Account',
                           style: AppTypography.displayMedium.copyWith(
@@ -221,7 +233,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         SizedBox(height: AppDimensions.spaceXxl),
-
                         Container(
                           decoration: BoxDecoration(
                             color: AppColors.background,
@@ -242,6 +253,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             padding: EdgeInsets.all(AppDimensions.spaceXxl),
                             child: Form(
                               key: _formKey,
+                              autovalidateMode: _submitted ? AutovalidateMode.always : AutovalidateMode.disabled,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -252,23 +264,32 @@ class _RegisterPageState extends State<RegisterPage> {
                                     textInputAction: TextInputAction.next,
                                   ),
                                   SizedBox(height: AppDimensions.spaceM),
-
                                   AppTextField(
                                     controller: _last,
                                     label: 'Last Name (optional)',
                                     textInputAction: TextInputAction.next,
                                   ),
                                   SizedBox(height: AppDimensions.spaceM),
-
-                                  AppTextField(
-                                    controller: _email,
-                                    label: 'Email',
-                                    keyboardType: TextInputType.emailAddress,
-                                    validator: _validateEmail,
-                                    textInputAction: TextInputAction.next,
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      AppTextField(
+                                        controller: _email,
+                                        label: 'Email',
+                                        keyboardType: TextInputType.emailAddress,
+                                        validator: _validateEmail,
+                                        textInputAction: TextInputAction.next,
+                                      ),
+                                      SizedBox(height: AppDimensions.spaceXs),
+                                      Text(
+                                        'Use your university email (@newuu.uz)',
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: AppColors.textMuted,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   SizedBox(height: AppDimensions.spaceM),
-
                                   AppTextField(
                                     controller: _phone,
                                     label: 'Phone Number',
@@ -277,16 +298,14 @@ class _RegisterPageState extends State<RegisterPage> {
                                     textInputAction: TextInputAction.next,
                                   ),
                                   SizedBox(height: AppDimensions.spaceM),
-
                                   AppTextField(
                                     controller: _username,
                                     label: 'Username (optional)',
                                     textInputAction: TextInputAction.next,
                                   ),
                                   SizedBox(height: AppDimensions.spaceM),
-
                                   DropdownButtonFormField<String>(
-                                    initialValue: _gender,
+                                    value: _gender,
                                     items: const [
                                       DropdownMenuItem(value: 'male', child: Text('Male')),
                                       DropdownMenuItem(value: 'female', child: Text('Female')),
@@ -297,6 +316,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     },
                                     decoration: InputDecoration(
                                       labelText: 'Gender',
+                                      hintText: 'Select gender',
                                       filled: true,
                                       fillColor: AppColors.backgroundTertiary,
                                       border: OutlineInputBorder(
@@ -319,42 +339,54 @@ class _RegisterPageState extends State<RegisterPage> {
                                     validator: (v) => (v == null || v.isEmpty) ? 'Please select gender' : null,
                                   ),
                                   SizedBox(height: AppDimensions.spaceM),
-
                                   AppTextField(
                                     controller: _patronymic,
                                     label: 'Patronymic (optional)',
                                     textInputAction: TextInputAction.next,
                                   ),
                                   SizedBox(height: AppDimensions.spaceM),
-
-                                  AppTextField(
-                                    controller: _password,
-                                    label: 'Password',
-                                    obscureText: _obscure,
-                                    validator: _validatePassword,
-                                    textInputAction: TextInputAction.next,
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _obscure ? Icons.visibility_off : Icons.visibility,
-                                        color: AppColors.textMuted,
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      AppTextField(
+                                        controller: _password,
+                                        label: 'Password',
+                                        obscureText: _obscure,
+                                        validator: _validatePassword,
+                                        textInputAction: TextInputAction.next,
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscure ? Icons.visibility_off : Icons.visibility,
+                                            color: AppColors.textMuted,
+                                          ),
+                                          onPressed: () => setState(() => _obscure = !_obscure),
+                                        ),
                                       ),
-                                      onPressed: () => setState(() => _obscure = !_obscure),
-                                    ),
+                                      SizedBox(height: AppDimensions.spaceXs),
+                                      Text(
+                                        'Password must be at least 6 characters',
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: AppColors.textMuted,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   SizedBox(height: AppDimensions.spaceM),
-
                                   AppTextField(
                                     controller: _confirm,
                                     label: 'Confirm Password',
                                     obscureText: true,
-                                    validator: (v) => v == null || v.isEmpty ? 'Confirm password' : null,
+                                    validator: (v) {
+                                      if (v == null || v.isEmpty) return 'Confirm password';
+                                      if (v != _password.text) return 'Passwords do not match';
+                                      return null;
+                                    },
                                     textInputAction: TextInputAction.done,
                                   ),
                                   SizedBox(height: AppDimensions.spaceXxl),
-
                                   AppButton.secondary(
                                     text: 'Register',
-                                    onPressed: isLoading || !_canSubmit ? null : _onSubmit,
+                                    onPressed: isLoading ? null : _onSubmit,
                                     isLoading: isLoading,
                                     fullWidth: true,
                                   ),
@@ -364,7 +396,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         SizedBox(height: AppDimensions.spaceXl),
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
