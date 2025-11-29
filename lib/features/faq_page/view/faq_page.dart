@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_typography.dart';
 
 class FaqPage extends StatelessWidget {
   const FaqPage({Key? key}) : super(key: key);
@@ -49,88 +52,141 @@ class FaqPage extends StatelessWidget {
       ),
     ];
 
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F4F8),
+      backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF4F4F8),
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.pop(),
+          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => context.go('/settings'),
         ),
         title: Text(
           'FAQ',
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: Colors.black,
-            fontWeight: FontWeight.w700,
-          ),
+          style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
         ),
         centerTitle: true,
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Small header / description
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text(
-              'Frequently asked questions',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade700,
-              ),
+          Container(
+            width: double.infinity,
+            padding: AppDimensions.allXl,
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadow.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: AppColors.primaryGradient,
+                    ),
+                    borderRadius: AppDimensions.borderRadiusL,
+                  ),
+                  child: Icon(
+                    Icons.help_outline_rounded,
+                    size: 32,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: AppDimensions.spaceL),
+                Text(
+                  'How can we help you?',
+                  style: AppTypography.h3.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: AppDimensions.spaceS),
+                Text(
+                  'Find answers to frequently asked questions',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textMuted,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
+          
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: AppDimensions.allL,
               itemCount: faqs.length,
               itemBuilder: (context, index) {
                 final item = faqs[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  elevation: 2,
-                  color: Colors.white,
-                  shadowColor: Colors.black12,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                return Container(
+                  margin: EdgeInsets.only(bottom: AppDimensions.spaceM),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: AppDimensions.borderRadiusL,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.shadow.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Theme(
-                    // Remove default ExpansionTile divider color
-                    data: theme.copyWith(
+                    data: Theme.of(context).copyWith(
                       dividerColor: Colors.transparent,
                     ),
                     child: ExpansionTile(
-                      tilePadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      childrenPadding: const EdgeInsets.fromLTRB(
-                        16,
+                      tilePadding: AppDimensions.allL,
+                      childrenPadding: EdgeInsets.fromLTRB(
+                        AppDimensions.spaceL,
                         0,
-                        16,
-                        12,
+                        AppDimensions.spaceL,
+                        AppDimensions.spaceL,
                       ),
-                      iconColor: theme.colorScheme.primary,
-                      collapsedIconColor: Colors.grey.shade500,
+                      iconColor: AppColors.primary,
+                      collapsedIconColor: AppColors.textMuted,
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: AppDimensions.borderRadiusM,
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Q${index + 1}',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
                       title: Text(
                         item.question,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
+                        style: AppTypography.labelLarge.copyWith(
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
+                        Container(
+                          padding: AppDimensions.allM,
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundTertiary,
+                            borderRadius: AppDimensions.borderRadiusM,
+                          ),
                           child: Text(
                             item.answer,
-                            style: TextStyle(
-                              color: Colors.grey.shade700,
-                              height: 1.5,
-                              fontSize: 14,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.6,
                             ),
                           ),
                         ),

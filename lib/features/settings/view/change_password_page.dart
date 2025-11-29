@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_typography.dart';
 import '../../../core/di/injection.dart';
 import '../../../data/repositories/user_repository.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({Key? key}) : super(key: key);
@@ -69,7 +72,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ),
       );
 
-      context.pop();
+      context.go('/settings');
     } catch (e) {
       if (!mounted) return;
 
@@ -91,111 +94,207 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        title: const Text('Change Password'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => context.go('/settings'),
+        ),
+        title: Text(
+          'Change Password',
+          style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+        ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 20),
-              Text(
-                'Enter your new password',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
+      body: SingleChildScrollView(
+        padding: AppDimensions.allXl,
+        child: Column(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: AppColors.primaryGradient,
                 ),
-                textAlign: TextAlign.center,
+                borderRadius: AppDimensions.borderRadiusXl,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Make sure it\'s at least 6 characters long',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
+              child: Icon(
+                Icons.lock_reset_rounded,
+                size: 40,
+                color: Colors.white,
               ),
-              const SizedBox(height: 40),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: 'New Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                    icon: Icon(
-                      _obscurePassword 
-                          ? Icons.visibility_off_outlined 
-                          : Icons.visibility_outlined,
-                    ),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: _validatePassword,
-                onChanged: (value) {
-                  // Trigger validation for confirm password field if it has content
-                  if (_confirmPasswordController.text.isNotEmpty) {
-                    _formKey.currentState!.validate();
-                  }
-                },
+            ),
+            SizedBox(height: AppDimensions.spaceXxl),
+            
+            Text(
+              'Create New Password',
+              style: AppTypography.h2.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _confirmPasswordController,
-                obscureText: _obscureConfirmPassword,
-                decoration: InputDecoration(
-                  labelText: 'Confirm New Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                    icon: Icon(
-                      _obscureConfirmPassword 
-                          ? Icons.visibility_off_outlined 
-                          : Icons.visibility_outlined,
-                    ),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: _validateConfirmPassword,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: AppDimensions.spaceS),
+            Text(
+              'Make sure it\'s at least 6 characters long',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textMuted,
               ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _changePassword,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: AppDimensions.spaceXxl),
+            
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: AppDimensions.borderRadiusXl,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.shadow.withValues(alpha: 0.08),
+                    blurRadius: 30,
+                    offset: const Offset(0, 15),
                   ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(
-                        'Change Password',
-                        style: TextStyle(fontSize: 16),
+                ],
+              ),
+              padding: AppDimensions.allXxl,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      validator: _validatePassword,
+                      decoration: InputDecoration(
+                        labelText: 'New Password',
+                        filled: true,
+                        fillColor: AppColors.backgroundTertiary,
+                        prefixIcon: Icon(Icons.lock_outline_rounded, color: AppColors.primary),
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                          icon: Icon(
+                            _obscurePassword 
+                                ? Icons.visibility_off_outlined 
+                                : Icons.visibility_outlined,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: AppDimensions.borderRadiusM,
+                          borderSide: BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: AppDimensions.borderRadiusM,
+                          borderSide: BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: AppDimensions.borderRadiusM,
+                          borderSide: BorderSide(
+                            color: AppColors.primary,
+                            width: AppDimensions.inputBorderWidthFocused,
+                          ),
+                        ),
+                        contentPadding: AppDimensions.inputPadding,
                       ),
+                      onChanged: (value) {
+                        if (_confirmPasswordController.text.isNotEmpty) {
+                          _formKey.currentState!.validate();
+                        }
+                      },
+                    ),
+                    SizedBox(height: AppDimensions.spaceL),
+                    
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: _obscureConfirmPassword,
+                      validator: _validateConfirmPassword,
+                      decoration: InputDecoration(
+                        labelText: 'Confirm New Password',
+                        filled: true,
+                        fillColor: AppColors.backgroundTertiary,
+                        prefixIcon: Icon(Icons.lock_outline_rounded, color: AppColors.primary),
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                            });
+                          },
+                          icon: Icon(
+                            _obscureConfirmPassword 
+                                ? Icons.visibility_off_outlined 
+                                : Icons.visibility_outlined,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: AppDimensions.borderRadiusM,
+                          borderSide: BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: AppDimensions.borderRadiusM,
+                          borderSide: BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: AppDimensions.borderRadiusM,
+                          borderSide: BorderSide(
+                            color: AppColors.primary,
+                            width: AppDimensions.inputBorderWidthFocused,
+                          ),
+                        ),
+                        contentPadding: AppDimensions.inputPadding,
+                      ),
+                    ),
+                    SizedBox(height: AppDimensions.spaceXxl),
+                    
+                    AppButton.primary(
+                      text: 'Change Password',
+                      onPressed: _isLoading ? null : _changePassword,
+                      isLoading: _isLoading,
+                      fullWidth: true,
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+            
+            SizedBox(height: AppDimensions.spaceXl),
+            
+            Container(
+              padding: AppDimensions.allL,
+              decoration: BoxDecoration(
+                color: AppColors.infoLight,
+                borderRadius: AppDimensions.borderRadiusL,
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: AppColors.info, size: 20),
+                  SizedBox(width: AppDimensions.spaceM),
+                  Expanded(
+                    child: Text(
+                      'Choose a strong password with a mix of letters and numbers',
+                      style: AppTypography.captionMedium.copyWith(
+                        color: AppColors.info,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

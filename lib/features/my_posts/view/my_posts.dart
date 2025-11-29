@@ -40,6 +40,10 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF111827)),
+          onPressed: () => context.go('/profile'),
+        ),
         title: const Text(
           "My Posts",
           style: TextStyle(

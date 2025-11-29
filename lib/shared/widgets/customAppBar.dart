@@ -26,7 +26,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.pageBackground,
         boxShadow: [
           BoxShadow(
             color: AppColors.shadow.withValues(alpha: 0.04),
@@ -76,7 +76,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-/// Modern app logo/name with gradient
+
 class _AppLogo extends StatelessWidget {
   final VoidCallback? onTap;
 
@@ -135,7 +135,7 @@ class _AppLogo extends StatelessWidget {
   }
 }
 
-/// Modern icon button with smooth animations
+
 class _ModernIconButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback? onTap;
@@ -208,7 +208,7 @@ class _ModernIconButtonState extends State<_ModernIconButton> {
   }
 }
 
-/// Modern profile button with user avatar
+
 class _ModernProfileButton extends StatefulWidget {
   final VoidCallback? onTap;
 

@@ -143,7 +143,7 @@ class _MyFavouritePostsScreenState extends State<MyFavouritePostsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/profile'),
         ),
         title: Text(
           'My favourites',

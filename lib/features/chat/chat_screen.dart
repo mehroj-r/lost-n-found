@@ -102,17 +102,7 @@ class _ChatScreenContentState extends State<_ChatScreenContent> {
   }
 
   void _handleBackNavigation() {
-    // Use context.pop() first, fallback to home if it fails
-    try {
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      } else {
-        context.go('/home');
-      }
-    } catch (e) {
-      // Fallback to home if navigation fails
-      context.go('/home');
-    }
+    context.go('/chats');
   }
 
   @override

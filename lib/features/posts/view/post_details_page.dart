@@ -133,7 +133,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     return BlocProvider(
       create: (context) => PostDetailCubit(ServiceLocator().postRepository),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA),
+        backgroundColor: AppColors.pageBackground,
         extendBodyBehindAppBar: true,
         body: CustomScrollView(
           slivers: [
@@ -178,11 +178,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
             icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
             color: Colors.white,
             onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/home');
-              }
+              context.go('/home');
             },
           ),
         ),

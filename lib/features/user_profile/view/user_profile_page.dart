@@ -166,11 +166,7 @@
                               color: Colors.transparent,
                               child: InkWell(
                                 onTap: () {
-                                  if (context.canPop()) {
-                                    context.pop();
-                                  } else {
-                                    context.go('/home');
-                                  }
+                                  context.go('/home');
                                 },
                                 borderRadius: BorderRadius.circular(20),
                                 child: Container(

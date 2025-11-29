@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../data/models/notification.dart';
@@ -101,7 +102,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
         title: const Text(
           'Notifications',
@@ -112,7 +113,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: const Color(0xFFF5F7FA),
+        backgroundColor: AppColors.background,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/customAppBar.dart';
 import '../../../shared/widgets/postWidget.dart';
 import '../controller/home_controller.dart';
@@ -42,6 +43,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.pageBackground,
       appBar: CustomAppBar(
         onNotificationTap: () {
           context.push('/notifications');
@@ -204,7 +206,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5B4FFE).withOpacity(0.3),
+            color: const Color(0xFF5B4FFE).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),

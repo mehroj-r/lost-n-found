@@ -244,11 +244,7 @@ class _UploadPageViewState extends State<UploadPageView> with SingleTickerProvid
           // Navigate back
           Future.delayed(const Duration(milliseconds: 800), () {
             if (mounted) {
-              if (isEditMode) {
-                context.pop();
-              } else {
-                context.go('/home');
-              }
+              context.go('/home');
             }
           });
         } else if (state is UploadError) {
