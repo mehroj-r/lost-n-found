@@ -36,8 +36,18 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
-        title: const Text("My Posts"),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: const Text(
+          "My Posts",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF111827),
+          ),
+        ),
         centerTitle: true,
       ),
       body: AnimatedBuilder(
@@ -45,10 +55,10 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
         builder: (context, child) {
           return Column(
             children: [
-              const SizedBox(height: 10),
-              // Filter chips
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              // Filter chips with modern styling
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -57,21 +67,13 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
                       final isSelected = _controller.selectedFilter.toLowerCase() == filter.toLowerCase();
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(filter),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            if (selected) {
-                              _controller.setFilter(filter);
-                            }
-                          },
-                        ),
+                        child: _buildModernFilterChip(filter, isSelected),
                       );
                     }).toList(),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               
               // Content
               Expanded(
@@ -80,6 +82,49 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildModernFilterChip(String label, bool isSelected) {
+    return GestureDetector(
+      onTap: () {
+        _controller.setFilter(label);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [
+                    Theme.of(context).primaryColor,
+                    Theme.of(context).primaryColor.withValues(alpha: 0.85),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSelected ? null : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            color: isSelected ? Colors.white : const Color(0xFF6B7280),
+          ),
+        ),
       ),
     );
   }
@@ -161,82 +206,400 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
     // Show posts list
     return RefreshIndicator(
       onRefresh: _controller.refresh,
+      color: Theme.of(context).primaryColor,
       child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 100), // Increased from 16 to 100 for navbar clearance
+        padding: const EdgeInsets.only(bottom: 100),
         itemCount: _controller.posts.length,
         itemBuilder: (context, index) {
           final post = _controller.posts[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
+          return _buildModernPostCard(post);
+        },
+      ),
+    );
+  }
+
+  Widget _buildModernPostCard(post) {
+    final isCompleted = post.isCompleted;
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: isCompleted
+            ? Border.all(
+                color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                width: 2,
+              )
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: isCompleted
+                ? const Color(0xFF10B981).withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+            spreadRadius: -2,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Completion banner
+          if (isCompleted)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF10B981).withValues(alpha: 0.15),
+                    const Color(0xFF10B981).withValues(alpha: 0.05),
+                  ],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Marked as Resolved',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF10B981),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'COMPLETED',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          
+          // Post widget with opacity for completed posts
+          Opacity(
+            opacity: isCompleted ? 0.75 : 1.0,
+            child: PostWidget(
+              post: post,
+              onTap: () {
+                print('Tapped on my post: ${post.title}');
+              },
+              onLikeToggle: (isLiked) {
+                _controller.toggleLike(post.id, isLiked);
+              },
+            ),
+          ),
+          
+          // Action buttons row
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Row(
               children: [
-                PostWidget(
-                  post: post,
+                // Mark as completed/incomplete button
+                Expanded(
+                  child: _buildActionButton(
+                    icon: isCompleted ? Icons.refresh_rounded : Icons.check_circle_rounded,
+                    label: isCompleted ? 'Mark as Active' : 'Mark as Resolved',
+                    color: isCompleted ? const Color(0xFF6B7280) : const Color(0xFF10B981),
+                    onTap: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => _buildCompletionDialog(isCompleted),
+                      );
+                      if (confirm == true) {
+                        await _controller.toggleCompleted(post.id, !isCompleted);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Edit button
+                _buildIconButton(
+                  icon: Icons.edit_outlined,
+                  color: Theme.of(context).primaryColor,
                   onTap: () {
-                    // Navigate to post detail
-                    print('Tapped on my post: ${post.title}');
-                  },
-                  onLikeToggle: (isLiked) {
-                    _controller.toggleLike(post.id, isLiked);
+                    context.push('/edit-post', extra: {'postId': post.id});
                   },
                 ),
-                // Edit button row
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton.icon(
-                        onPressed: () {
-                          context.push('/edit-post', extra: {'postId': post.id});
-                        },
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        label: const Text('Edit'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton.icon(
-                        onPressed: () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Delete Post'),
-                              content: const Text('Are you sure you want to delete this post?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Colors.red,
-                                  ),
-                                  child: const Text('Delete'),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (confirm == true) {
-                            await _controller.deletePost(post.id);
-                          }
-                        },
-                        icon: const Icon(Icons.delete_outline, size: 18),
-                        label: const Text('Delete'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
+                const SizedBox(width: 8),
+                // Delete button
+                _buildIconButton(
+                  icon: Icons.delete_outline,
+                  color: const Color(0xFFEF4444),
+                  onTap: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => _buildDeleteDialog(),
+                    );
+                    if (confirm == true) {
+                      await _controller.deletePost(post.id);
+                    }
+                  },
                 ),
               ],
             ),
-          );
-        },
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color,
+                color.withValues(alpha: 0.85),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: color.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompletionDialog(bool isCurrentlyCompleted) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isCurrentlyCompleted 
+                  ? const Color(0xFF6B7280).withValues(alpha: 0.1)
+                  : const Color(0xFF10B981).withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isCurrentlyCompleted ? Icons.refresh_rounded : Icons.check_circle_rounded,
+              color: isCurrentlyCompleted ? const Color(0xFF6B7280) : const Color(0xFF10B981),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              isCurrentlyCompleted ? 'Reactivate Post?' : 'Mark as Resolved?',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+      content: Text(
+        isCurrentlyCompleted
+            ? 'This will mark the post as active again and make it visible to others.'
+            : 'This will mark the post as resolved. The item will be marked as found/returned.',
+        style: TextStyle(
+          fontSize: 14,
+          color: Colors.grey[600],
+          height: 1.5,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isCurrentlyCompleted ? const Color(0xFF6B7280) : const Color(0xFF10B981),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: Text(
+            isCurrentlyCompleted ? 'Reactivate' : 'Mark Resolved',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDeleteDialog() {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.delete_outline,
+              color: Color(0xFFEF4444),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Delete Post?',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+      content: Text(
+        'Are you sure you want to delete this post? This action cannot be undone.',
+        style: TextStyle(
+          fontSize: 14,
+          color: Colors.grey[600],
+          height: 1.5,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFEF4444),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: const Text(
+            'Delete',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -267,7 +267,7 @@ class _HomePageState extends State<HomePage> {
             child: _buildStatCard(
               icon: Icons.search_rounded,
               label: 'Lost Items',
-              value: '0',
+              value: '215',
               color: const Color(0xFFEF4444),
             ),
           ),
@@ -276,7 +276,7 @@ class _HomePageState extends State<HomePage> {
             child: _buildStatCard(
               icon: Icons.location_on_rounded,
               label: 'Found Items',
-              value: '0',
+              value: '342',
               color: const Color(0xFF3B82F6),
             ),
           ),
@@ -285,7 +285,7 @@ class _HomePageState extends State<HomePage> {
             child: _buildStatCard(
               icon: Icons.check_circle_rounded,
               label: 'Resolved',
-              value: '0',
+              value: '487',
               color: const Color(0xFF10B981),
             ),
           ),

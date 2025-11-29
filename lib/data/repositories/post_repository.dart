@@ -19,6 +19,7 @@ abstract class IPostRepository {
   Future<void> likePost(int postId);
   Future<void> unlikePost(int postId);
   Future<List<Post>> getLikedPosts();
+  Future<Post> markAsCompleted(int postId, bool isCompleted);
 }
 
 class PostRepository implements IPostRepository {
@@ -177,5 +178,18 @@ class PostRepository implements IPostRepository {
   @override
   Future<void> unlikePost(int postId) async {
     await dioClient.delete('${ApiConfig.postsLike}$postId/likes/');
+  }
+
+  @override
+  Future<Post> markAsCompleted(int postId, bool isCompleted) async {
+    final response = await dioClient.patch(
+      '${ApiConfig.postsUpdate}$postId/',
+      data: {'is_completed': isCompleted},
+    );
+    final responseData = response.data;
+    if (responseData is Map && responseData['success'] == true && responseData.containsKey('data')) {
+      return Post.fromJson(responseData['data']);
+    }
+    throw Exception('Failed to mark post as completed');
   }
 }

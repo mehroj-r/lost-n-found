@@ -146,4 +146,29 @@ class MyPostsController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> toggleCompleted(int postId, bool isCompleted) async {
+    try {
+      // Optimistic update
+      final postIndex = _posts.indexWhere((post) => post.id == postId);
+      if (postIndex != -1) {
+        final post = _posts[postIndex];
+        _posts[postIndex] = post.copyWith(isCompleted: isCompleted);
+        notifyListeners();
+      }
+
+      // Make API call
+      await _postRepository.markAsCompleted(postId, isCompleted);
+    } catch (e) {
+      // Revert optimistic update on error
+      final postIndex = _posts.indexWhere((post) => post.id == postId);
+      if (postIndex != -1) {
+        final post = _posts[postIndex];
+        _posts[postIndex] = post.copyWith(isCompleted: !isCompleted);
+        notifyListeners();
+      }
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
 }
