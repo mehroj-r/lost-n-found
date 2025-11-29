@@ -280,7 +280,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           SizedBox(height: AppDimensions.spaceL),
           
           _buildTextField(
-            label: 'Patronymic',
+            label: 'Patronymic (optional)',
             controller: _controller.patronymicController,
             icon: Icons.person_outline_rounded,
           ),
@@ -299,6 +299,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
             controller: _controller.emailController,
             icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
+          ),
+          SizedBox(height: AppDimensions.spaceL),
+
+          _buildTextField(
+            label: 'Username (optional)',
+            controller: _controller.usernameController,
+            icon: Icons.account_circle_outlined,
+          ),
+          SizedBox(height: AppDimensions.spaceL),
+
+          _buildTextField(
+            label: 'Bio (optional)',
+            controller: _controller.bioController,
+            icon: Icons.info_outline,
+            keyboardType: TextInputType.multiline,
           ),
         ],
       ),

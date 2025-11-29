@@ -110,9 +110,10 @@ class EditProfileController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final username = usernameController.text.trim();
+
       final Map<String, dynamic> data = {
         'phone': phoneController.text.trim(),
-        'username': usernameController.text.trim(),
         'email': emailController.text.trim(),
         'first_name': firstNameController.text.trim(),
         'last_name': lastNameController.text.trim(),
@@ -125,9 +126,11 @@ class EditProfileController extends ChangeNotifier {
             : bioController.text.trim(),
       };
 
-      // Decide whether to include avatar
+      if (username.isNotEmpty) {
+        data['username'] = username;
+      }
+
       if (_avatarId != null) {
-        // New avatar uploaded in this session
         final avatarId = int.tryParse(_avatarId!);
         if (avatarId == null) {
           _isSaving = false;
@@ -136,19 +139,6 @@ class EditProfileController extends ChangeNotifier {
           return false;
         }
         data['avatar'] = avatarId;
-      } else {
-        // No new avatar this session
-        // If user has NO existing avatar URL, require upload
-        final hasExistingAvatar =
-            user.avatarUrl != null && user.avatarUrl!.isNotEmpty;
-
-        if (!hasExistingAvatar) {
-          _isSaving = false;
-          _error = 'Please upload an avatar before saving your profile.';
-          notifyListeners();
-          return false;
-        }
-        // Otherwise: do not include avatar field; backend will keep current avatar.
       }
 
       final savedUser = await _userRepo.updateProfile(data);
@@ -170,7 +160,6 @@ class EditProfileController extends ChangeNotifier {
       _isSaving = false;
       _error = e.toString();
       notifyListeners();
-
       return false;
     }
   }
