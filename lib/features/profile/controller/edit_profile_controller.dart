@@ -83,15 +83,10 @@ class EditProfileController extends ChangeNotifier {
       _avatarId = id;
       _avatarPreview = picked.path; // local preview
 
-      if (kDebugMode) {
-        print('New avatar uploaded, id=$_avatarId, preview=$_avatarPreview');
-      }
+
     } catch (e, st) {
       _error = 'Avatar upload failed: $e';
-      if (kDebugMode) {
-        print('pickAndUploadAvatar error: $e');
-        print(st);
-      }
+
     } finally {
       _isUploadingAvatar = false;
       notifyListeners();
@@ -175,10 +170,7 @@ class EditProfileController extends ChangeNotifier {
       _isSaving = false;
       _error = e.toString();
       notifyListeners();
-      if (kDebugMode) {
-        print('EditProfileController.saveChanges error: $e');
-        print(st);
-      }
+
       return false;
     }
   }

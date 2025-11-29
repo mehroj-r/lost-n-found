@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/customAppBar.dart';
 import '../../../shared/widgets/postWidget.dart';
@@ -158,9 +157,7 @@ class _HomePageState extends State<HomePage> {
                 return PostWidget(
                   post: post,
                   onTap: () {
-                    if (kDebugMode) {
-                      print('Tapped on post: ${post.title}');
-                    }
+
                     context.go(
                       '/posts/${post.id}',
                       extra: post,

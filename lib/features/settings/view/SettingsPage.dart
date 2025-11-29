@@ -19,7 +19,6 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    // TODO: load real settings from storage / backend
   }
 
   void _onThemeChanged(ThemeMode? mode) {
@@ -27,7 +26,6 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _themeMode = mode;
     });
-    // TODO: persist theme choice in your app (e.g. via a theme cubit)
   }
 
   Future<void> _confirmDeleteAccount() async {
@@ -56,8 +54,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     if (confirmed == true) {
-      // TODO: call delete account API
-      // For now just show feedback:
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Account deletion not implemented yet')),
@@ -145,7 +141,6 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() {
                 _pushNotifications = value;
               });
-              // TODO: update preference in storage/backend
             },
           ),
           SwitchListTile(
@@ -156,7 +151,6 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() {
                 _emailNotifications = value;
               });
-              // TODO: update preference in storage/backend
             },
           ),
 

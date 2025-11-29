@@ -146,18 +146,11 @@ class UploadCubit extends Cubit<UploadState> {
 
   Future<void> uploadImage(String imagePath) async {
     try {
-      print('🔵 UploadCubit: Starting image upload for: $imagePath');
       emit(UploadingImage());
-
-      print('🔵 UploadCubit: Calling fileRepository.uploadFile()');
       _uploadedPhoto = await fileRepository.uploadFile(imagePath);
-
-      print('🟢 UploadCubit: Image uploaded successfully! Photo ID: ${_uploadedPhoto!.id}');
       _selectedImagePath = imagePath;
       emit(ImageUploaded(_uploadedPhoto!, imagePath));
     } catch (e, stackTrace) {
-      print('🔴 UploadCubit: Upload failed with error: $e');
-      print('🔴 UploadCubit: Stack trace: $stackTrace');
       emit(UploadError('Failed to upload image: ${e.toString()}'));
       // Revert to previous state
       if (_selectedImagePath != null) {

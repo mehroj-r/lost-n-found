@@ -66,7 +66,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           height: 110,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) {
-            debugPrint('Failed to load local avatar from $preview');
+
             return const Icon(Icons.person, size: 55, color: Colors.white);
           },
         );

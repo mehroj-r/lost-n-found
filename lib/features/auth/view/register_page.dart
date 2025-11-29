@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../auth/cubit/auth_cubit.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -72,23 +77,6 @@ class _RegisterPageState extends State<RegisterPage> {
     return null;
   }
 
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-        borderSide: BorderSide(color: Colors.green.shade700, width: 1.6),
-      ),
-    );
-  }
-
   void _recomputeCanSubmit() {
     final emailOk = _validateEmail(_email.text) == null;
     final phoneOk = _validatePhone(_phone.text) == null;
@@ -109,7 +97,6 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    // call cubit register
     context.read<AuthCubit>().register(
       firstName: _first.text.trim(),
       lastName: _last.text.trim().isEmpty ? null : _last.text.trim(),
@@ -125,201 +112,296 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // match clean look; change background if you want darker frame like screenshot
-      backgroundColor: const Color(0xFFF5F6F8),
-      appBar: AppBar(
-        title: const Text('Register'),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black87,
-      ),
-      body: SafeArea(
-        child: BlocConsumer<AuthCubit, AuthState>(
-          listener: (ctx, state) {
-            if (state.registrationSuccess) {
-              // registration succeeded -> navigate to login
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Registration successful! Please login.')),
-                );
-                context.go('/login');
-              }
-            } else if (state.error != null) {
-              // show error message
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error!)));
-            }
-          },
-          builder: (ctx, state) {
-            final isLoading = state.loading;
-            return Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: Column(
-                    children: [
-                      // logo card (replace with your asset or network image)
-                      Container(
-                        width: 220,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10)],
-                        ),
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.all(12),
-                        child: Image.asset(
-                          'assets/logo.png',
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Text('findly', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold)),
-                        ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.primary.withValues(alpha: 0.08),
+              AppColors.primaryLight.withValues(alpha: 0.05),
+              AppColors.background,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: BlocConsumer<AuthCubit, AuthState>(
+            listener: (ctx, state) {
+              if (state.registrationSuccess) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Registration successful! Please login.'),
+                      backgroundColor: AppColors.success,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: AppDimensions.borderRadiusM,
                       ),
+                    ),
+                  );
+                  context.go('/login');
+                }
+              } else if (state.error != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.error!),
+                    backgroundColor: AppColors.error,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppDimensions.borderRadiusM,
+                    ),
+                  ),
+                );
+              }
+            },
+            builder: (ctx, state) {
+              final isLoading = state.loading;
+              return Center(
+                child: SingleChildScrollView(
+                  padding: AppDimensions.allXl,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppDimensions.maxContentWidth,
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                              onPressed: () => context.go('/login'),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: AppDimensions.spaceM),
 
-                      const SizedBox(height: 22),
-
-                      Card(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              children: [
-                                TextFormField(
-                                  controller: _first,
-                                  decoration: _inputDecoration('First Name'),
-                                  validator: (v) => _notEmpty(v, 'First name'),
-                                  textInputAction: TextInputAction.next,
-                                ),
-                                const SizedBox(height: 12),
-
-                                TextFormField(
-                                  controller: _last,
-                                  decoration: _inputDecoration('Last Name (optional)'),
-                                  validator: (_) => null,
-                                  textInputAction: TextInputAction.next,
-                                ),
-                                const SizedBox(height: 12),
-
-                                TextFormField(
-                                  controller: _phone,
-                                  decoration: _inputDecoration('Phone Number').copyWith(prefixText: '+998 '),
-                                  keyboardType: TextInputType.phone,
-                                  validator: _validatePhone,
-                                  textInputAction: TextInputAction.next,
-                                ),
-                                const SizedBox(height: 12),
-
-                                TextFormField(
-                                  controller: _email,
-                                  decoration: _inputDecoration('Email'),
-                                  keyboardType: TextInputType.emailAddress,
-                                  validator: _validateEmail,
-                                  textInputAction: TextInputAction.next,
-                                ),
-                                const SizedBox(height: 12),
-
-                                DropdownButtonFormField<String>(
-                                  value: _gender,
-                                  items: const [
-                                    DropdownMenuItem(value: 'male', child: Text('Male')),
-                                    DropdownMenuItem(value: 'female', child: Text('Female')),
-                                  ],
-                                  onChanged: (v) { setState(() => _gender = v); _recomputeCanSubmit(); },
-                                  decoration: _inputDecoration('Gender'),
-                                  validator: (v) => (v == null || v.isEmpty) ? 'Please select gender' : null,
-                                ),
-                                const SizedBox(height: 12),
-
-                                TextFormField(
-                                  controller: _username,
-                                  decoration: _inputDecoration('Username (optional)'),
-                                  textInputAction: TextInputAction.next,
-                                ),
-                                const SizedBox(height: 12),
-
-                                TextFormField(
-                                  controller: _patronymic,
-                                  decoration: _inputDecoration('Patronymic (optional)'),
-                                  textInputAction: TextInputAction.next,
-                                ),
-                                const SizedBox(height: 12),
-
-                                TextFormField(
-                                  controller: _password,
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                      borderSide: BorderSide(color: Colors.green.shade700, width: 1.6),
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                                      onPressed: () => setState(() => _obscure = !_obscure),
-                                    ),
-                                  ),
-                                  obscureText: _obscure,
-                                  validator: _validatePassword,
-                                  textInputAction: TextInputAction.next,
-                                ),
-                                const SizedBox(height: 12),
-
-                                TextFormField(
-                                  controller: _confirm,
-                                  decoration: _inputDecoration('Confirm Password'),
-                                  obscureText: true,
-                                  validator: (v) => v == null || v.isEmpty ? 'Confirm password' : null,
-                                  textInputAction: TextInputAction.done,
-                                ),
-                                const SizedBox(height: 18),
-
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 48,
-                                  child: ElevatedButton(
-                                    onPressed: isLoading || !_canSubmit ? null : _onSubmit,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF6FA43B), // green
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                      elevation: 0,
-                                    ),
-                                    child: isLoading
-                                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                        : const Text('Register', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                                  ),
+                        Hero(
+                          tag: 'logo',
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: AppColors.primaryGradient,
+                              ),
+                              borderRadius: AppDimensions.borderRadiusL,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
                                 ),
                               ],
                             ),
+                            child: ClipRRect(
+                              borderRadius: AppDimensions.borderRadiusL,
+                              child: Image.asset(
+                                'assets/logo.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        SizedBox(height: AppDimensions.spaceXxl),
 
-                      const SizedBox(height: 12),
+                        Text(
+                          'Create Account',
+                          style: AppTypography.displayMedium.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: AppDimensions.spaceS),
+                        Text(
+                          'Join us to find your lost items',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        SizedBox(height: AppDimensions.spaceXxl),
 
-                      TextButton(
-                        onPressed: () {
-                          if (context.mounted) context.go('/login');
-                        },
-                        child: const Text('Already have an account? Sign in'),
-                      ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: AppDimensions.borderRadiusXl,
+                            border: Border.all(
+                              color: AppColors.border.withValues(alpha: 0.5),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.shadow.withValues(alpha: 0.08),
+                                blurRadius: 30,
+                                offset: const Offset(0, 15),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(AppDimensions.spaceXxl),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  AppTextField(
+                                    controller: _first,
+                                    label: 'First Name',
+                                    validator: (v) => _notEmpty(v, 'First name'),
+                                    textInputAction: TextInputAction.next,
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceM),
 
-                      const SizedBox(height: 8),
-                      const Text('Tip: use @newuu.uz email to register'),
-                    ],
+                                  AppTextField(
+                                    controller: _last,
+                                    label: 'Last Name (optional)',
+                                    textInputAction: TextInputAction.next,
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceM),
+
+                                  AppTextField(
+                                    controller: _email,
+                                    label: 'Email',
+                                    keyboardType: TextInputType.emailAddress,
+                                    validator: _validateEmail,
+                                    textInputAction: TextInputAction.next,
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceM),
+
+                                  AppTextField(
+                                    controller: _phone,
+                                    label: 'Phone Number',
+                                    keyboardType: TextInputType.phone,
+                                    validator: _validatePhone,
+                                    textInputAction: TextInputAction.next,
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceM),
+
+                                  AppTextField(
+                                    controller: _username,
+                                    label: 'Username (optional)',
+                                    textInputAction: TextInputAction.next,
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceM),
+
+                                  DropdownButtonFormField<String>(
+                                    initialValue: _gender,
+                                    items: const [
+                                      DropdownMenuItem(value: 'male', child: Text('Male')),
+                                      DropdownMenuItem(value: 'female', child: Text('Female')),
+                                    ],
+                                    onChanged: (v) {
+                                      setState(() => _gender = v);
+                                      _recomputeCanSubmit();
+                                    },
+                                    decoration: InputDecoration(
+                                      labelText: 'Gender',
+                                      filled: true,
+                                      fillColor: AppColors.backgroundTertiary,
+                                      border: OutlineInputBorder(
+                                        borderRadius: AppDimensions.borderRadiusM,
+                                        borderSide: BorderSide(color: AppColors.border),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: AppDimensions.borderRadiusM,
+                                        borderSide: BorderSide(color: AppColors.border),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: AppDimensions.borderRadiusM,
+                                        borderSide: BorderSide(
+                                          color: AppColors.primary,
+                                          width: AppDimensions.inputBorderWidthFocused,
+                                        ),
+                                      ),
+                                      contentPadding: AppDimensions.inputPadding,
+                                    ),
+                                    validator: (v) => (v == null || v.isEmpty) ? 'Please select gender' : null,
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceM),
+
+                                  AppTextField(
+                                    controller: _patronymic,
+                                    label: 'Patronymic (optional)',
+                                    textInputAction: TextInputAction.next,
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceM),
+
+                                  AppTextField(
+                                    controller: _password,
+                                    label: 'Password',
+                                    obscureText: _obscure,
+                                    validator: _validatePassword,
+                                    textInputAction: TextInputAction.next,
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscure ? Icons.visibility_off : Icons.visibility,
+                                        color: AppColors.textMuted,
+                                      ),
+                                      onPressed: () => setState(() => _obscure = !_obscure),
+                                    ),
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceM),
+
+                                  AppTextField(
+                                    controller: _confirm,
+                                    label: 'Confirm Password',
+                                    obscureText: true,
+                                    validator: (v) => v == null || v.isEmpty ? 'Confirm password' : null,
+                                    textInputAction: TextInputAction.done,
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceXxl),
+
+                                  AppButton.secondary(
+                                    text: 'Register',
+                                    onPressed: isLoading || !_canSubmit ? null : _onSubmit,
+                                    isLoading: isLoading,
+                                    fullWidth: true,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: AppDimensions.spaceXl),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Already have an account? ',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                if (context.mounted) context.go('/login');
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.primary,
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Sign in',
+                                style: AppTypography.labelMedium.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: AppDimensions.spaceXxxl),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

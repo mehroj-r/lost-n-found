@@ -131,19 +131,17 @@ class HomeController extends ChangeNotifier {
         notifyListeners();
       }
       // Could show error message here
-      print('Error toggling like: $e');
+
     }
   }
 
   Future<void> _fetchUnreadNotificationCount() async {
     try {
-      print('Fetching unread notification count...');
       final count = await _notificationRepository.getUnreadCount();
-      print('Unread notification count: $count');
       _unreadNotificationCount = count;
     } catch (e) {
       // Silently fail for notification count - don't show error for this
-      print('Error fetching unread notification count: $e');
+
       _unreadNotificationCount = 0;
     }
   }

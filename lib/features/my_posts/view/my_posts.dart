@@ -57,7 +57,7 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
             children: [
               // Filter chips with modern styling
               Container(
-                color: Colors.white,
+                color: Colors.transparent,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -313,7 +313,7 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
             child: PostWidget(
               post: post,
               onTap: () {
-                print('Tapped on my post: ${post.title}');
+
               },
               onLikeToggle: (isLiked) {
                 _controller.toggleLike(post.id, isLiked);

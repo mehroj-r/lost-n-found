@@ -300,7 +300,7 @@ class SearchController extends ChangeNotifier {
       }
     } catch (e) {
       // Could revert changes on error
-      print('Error toggling like: $e');
+
     }
   }
 

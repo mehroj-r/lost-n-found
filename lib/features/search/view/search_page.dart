@@ -906,7 +906,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 post: post,
                 onTap: () {
                   // Navigate to post detail
-                  print('Tapped on search result: ${post.title}');
+
                 },
                 onLikeToggle: (isLiked) {
                   _searchController.toggleLike(post.id, isLiked);
@@ -961,7 +961,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               return PostWidget(
                 post: post,
                 onTap: () {
-                  print('Tapped on recent post: ${post.title}');
+
                 },
                 onLikeToggle: (isLiked) {
                   _searchController.toggleLike(post.id, isLiked);

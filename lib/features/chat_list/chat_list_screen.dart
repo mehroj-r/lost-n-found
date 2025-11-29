@@ -41,9 +41,7 @@ class _ChatListContent extends StatelessWidget {
         foregroundColor: Colors.black,
         actions: [
           IconButton(
-            onPressed: () {
-              // TODO: Implement search functionality
-            },
+            onPressed: () {},
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(

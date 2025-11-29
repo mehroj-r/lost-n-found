@@ -141,15 +141,6 @@ class NavigationHistory extends ChangeNotifier {
     
     return NavigationType.forward;
   }
-
-  /// Debug print history
-  void debugPrint() {
-    if (kDebugMode) {
-      print('Navigation History:');
-      print('Current: $_currentPath');
-      print('History: $_history');
-    }
-  }
 }
 
 /// Types of navigation for animation purposes

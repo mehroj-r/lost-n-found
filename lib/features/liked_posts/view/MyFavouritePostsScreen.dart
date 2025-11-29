@@ -118,8 +118,7 @@ class _MyFavouritePostsScreenState extends State<MyFavouritePostsScreen> {
                 child: PostWidget(
                   post: post,
                   onTap: () {
-                    // TODO: navigate to post detail when you have the route
-                    // context.push('/posts/${post.id}');
+                    context.push('/posts/${post.id}');
                   },
                   onLikeToggle: (isLiked) {
                     _controller.toggleLike(post.id, isLiked);

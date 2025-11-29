@@ -26,10 +26,7 @@ class MyFavouritePostsController extends ChangeNotifier {
       _posts = await _postRepository.getLikedPosts();
     } catch (e, st) {
       _error = e.toString();
-      if (kDebugMode) {
-        print('MyFavouritePostsController.fetchFavouritePosts error: $e');
-        print(st);
-      }
+
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -70,10 +67,7 @@ class MyFavouritePostsController extends ChangeNotifier {
     } catch (e, st) {
       _error = e.toString();
       notifyListeners();
-      if (kDebugMode) {
-        print('MyFavouritePostsController.toggleLike error: $e');
-        print(st);
-      }
+
     }
   }
 }

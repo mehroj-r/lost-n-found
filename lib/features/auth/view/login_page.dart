@@ -49,137 +49,183 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
-      body: SafeArea(
-        child: BlocConsumer<AuthCubit, AuthState>(
-          listener: (ctx, state) {
-            if (state.user != null && !state.loading) {
-              if (context.mounted) {
-                context.go('/home');
-              }
-            } else if (state.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.error!),
-                  backgroundColor: AppColors.error,
-                ),
-              );
-            }
-          },
-          builder: (ctx, state) {
-            final isLoading = state.loading;
-            return Center(
-              child: SingleChildScrollView(
-                padding: AppDimensions.allXl,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppDimensions.maxContentWidth,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.primary.withValues(alpha: 0.08),
+              AppColors.primaryLight.withValues(alpha: 0.05),
+              AppColors.background,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: BlocConsumer<AuthCubit, AuthState>(
+            listener: (ctx, state) {
+              if (state.user != null && !state.loading) {
+                if (context.mounted) {
+                  context.go('/home');
+                }
+              } else if (state.error != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.error!),
+                    backgroundColor: AppColors.error,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppDimensions.borderRadiusM,
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      // Logo
-                      Container(
-                        width: 220,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: AppDimensions.borderRadiusM,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.shadow.withValues(alpha: 0.06),
-                              blurRadius: AppDimensions.blurRadiusSmall,
+                );
+              }
+            },
+            builder: (ctx, state) {
+              final isLoading = state.loading;
+              return Center(
+                child: SingleChildScrollView(
+                  padding: AppDimensions.allXl,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppDimensions.maxContentWidth,
+                    ),
+                    child: Column(
+                      children: [
+                        Hero(
+                          tag: 'logo',
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: AppColors.primaryGradient,
+                              ),
+                              borderRadius: AppDimensions.borderRadiusXl,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: AppDimensions.borderRadiusXl,
+                              child: Image.asset(
+                                'assets/logo.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: AppDimensions.spaceXxl),
+
+                        Text(
+                          'Welcome Back',
+                          style: AppTypography.displayMedium.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: AppDimensions.spaceS),
+                        Text(
+                          'Sign in to continue',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        SizedBox(height: AppDimensions.spaceXxxl),
+
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: AppDimensions.borderRadiusXl,
+                            border: Border.all(
+                              color: AppColors.border.withValues(alpha: 0.5),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.shadow.withValues(alpha: 0.08),
+                                blurRadius: 30,
+                                offset: const Offset(0, 15),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(AppDimensions.spaceXxl),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                children: [
+                                  AppTextField(
+                                    controller: _emailCtrl,
+                                    label: 'Email',
+                                    keyboardType: TextInputType.emailAddress,
+                                    validator: _validateEmail,
+                                    textInputAction: TextInputAction.next,
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceL),
+                                  AppTextField(
+                                    controller: _passCtrl,
+                                    label: 'Password',
+                                    obscureText: true,
+                                    validator: _validatePassword,
+                                    textInputAction: TextInputAction.done,
+                                  ),
+                                  SizedBox(height: AppDimensions.spaceXxl),
+                                  AppButton.secondary(
+                                    text: 'Login',
+                                    onPressed: isLoading ? null : _onSubmit,
+                                    isLoading: isLoading,
+                                    fullWidth: true,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: AppDimensions.spaceXl),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Don't have an account? ",
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                if (context.mounted) context.go('/register');
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.primary,
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Register',
+                                style: AppTypography.labelMedium.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                        alignment: Alignment.center,
-                        padding: AppDimensions.allM,
-                        child: Image.asset(
-                          'assets/logo.png',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      SizedBox(height: AppDimensions.spaceXxl),
-
-                      // Form card
-                      Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: AppDimensions.borderRadiusL,
-                        ),
-                        elevation: AppDimensions.cardElevation,
-                        color: AppColors.background,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: AppDimensions.spaceL + 2,
-                            vertical: AppDimensions.spaceXl,
-                          ),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              children: [
-                                AppTextField(
-                                  controller: _emailCtrl,
-                                  label: 'Email',
-                                  keyboardType: TextInputType.emailAddress,
-                                  validator: _validateEmail,
-                                  textInputAction: TextInputAction.next,
-                                ),
-                                SizedBox(height: AppDimensions.spaceM),
-                                AppTextField(
-                                  controller: _passCtrl,
-                                  label: 'Password',
-                                  obscureText: true,
-                                  validator: _validatePassword,
-                                  textInputAction: TextInputAction.done,
-                                ),
-                                SizedBox(height: AppDimensions.spaceL + 2),
-                                AppButton.secondary(
-                                  text: 'Login',
-                                  onPressed: isLoading ? null : _onSubmit,
-                                  isLoading: isLoading,
-                                  fullWidth: true,
-                                ),
-                                if (!isLoading && state.error != null) ...[
-                                  SizedBox(height: AppDimensions.spaceS),
-                                  Text(
-                                    state.error!,
-                                    style: AppTypography.captionMedium.copyWith(
-                                      color: AppColors.error,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: AppDimensions.spaceL),
-
-                      TextButton(
-                        onPressed: () {
-                          if (context.mounted) context.go('/register');
-                        },
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                        ),
-                        child: Text(
-                          "Don't have an account? Register",
-                          style: AppTypography.labelMedium.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: AppDimensions.spaceXs),
-                      Text(
-                        'Use: admin@newuu.uz / 12345',
-                        style: AppTypography.captionSmall,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

@@ -180,7 +180,7 @@ class AppButton extends StatelessWidget {
         elevation = 0;
         break;
       case AppButtonStyle.secondary:
-        backgroundColor = isDisabled ? AppColors.textDisabled : AppColors.accent;
+        backgroundColor = isDisabled ? AppColors.textDisabled : AppColors.primary;
         elevation = 0;
         break;
       case AppButtonStyle.danger:
