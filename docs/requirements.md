@@ -1464,3 +1464,9 @@ Each requirement includes:
 
 Developers can use this document as a reference to understand the complete scope of the application and implement features according to the specified requirements.
 
+
+## UML Activity Diagram
+
+The following diagram shows the main activities and flows of the Lost & Found application.
+
+![UML Activity Diagram of Findly](lost-n-found-uml.png)
