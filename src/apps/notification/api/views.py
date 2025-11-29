@@ -1,4 +1,5 @@
-from django.db.models import Q, Case, When, BooleanField, OuterRef, Subquery
+from django.db.models import Q, Case, When, BooleanField, OuterRef, Subquery, Value
+from django.db.models.functions import Coalesce
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -24,7 +25,11 @@ class NotificationViewSet(BaseAPIView, viewsets.ModelViewSet):
         queryset = super().get_queryset().filter(
             Q(users=self.request.user) | Q(broadcast_type=NotificationBroadcast.ALL)
         ).annotate(
-            is_read=Subquery(read_status, output_field=BooleanField())
+            is_read=Coalesce(
+                Subquery(read_status, output_field=BooleanField()),
+                Value(False),
+                output_field=BooleanField()
+            )
         ).order_by('-created_at').distinct()
 
         return queryset
