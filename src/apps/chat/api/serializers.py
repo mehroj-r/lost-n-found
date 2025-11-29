@@ -6,24 +6,6 @@ from apps.chat.models import Chat, Message
 from apps.post.api.serializers import PostSerializer
 
 
-class ChatSerializer(serializers.ModelSerializer):
-    post = PostSerializer(read_only=True)
-    users = UserSerializer(read_only=True, many=True)
-
-    class Meta:
-        model = Chat
-        fields = [
-            'id',
-            'post',
-            'name',
-            'users',
-            'created_at'
-        ]
-
-        extra_kwargs = {
-            'created_at': {'read_only': True},
-        }
-
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True, default=CurrentUserDefault())
     display_type = serializers.SerializerMethodField()
@@ -49,3 +31,40 @@ class MessageSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         return 'outgoing' if obj.sender == user else 'incoming'
 
+
+class ChatListSerializer(serializers.ModelSerializer):
+    post = PostSerializer(read_only=True)
+    last_message = MessageSerializer(source='get_last_message', read_only=True)
+
+    class Meta:
+        model = Chat
+        fields = [
+            'id',
+            'name',
+            'post',
+            'last_message',
+            'created_at'
+        ]
+
+        extra_kwargs = {
+            'created_at': {'read_only': True},
+        }
+
+
+class ChatSerializer(serializers.ModelSerializer):
+    post = PostSerializer(read_only=True)
+    users = UserSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Chat
+        fields = [
+            'id',
+            'post',
+            'name',
+            'users',
+            'created_at'
+        ]
+
+        extra_kwargs = {
+            'created_at': {'read_only': True},
+        }

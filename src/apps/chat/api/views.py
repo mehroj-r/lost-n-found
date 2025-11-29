@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.chat.api.serializers import ChatSerializer, MessageSerializer
+from apps.chat.api.serializers import ChatSerializer, MessageSerializer, ChatListSerializer
 from apps.chat.models import Chat
 from apps.core.api.views.base import BaseAPIView
 
@@ -12,6 +12,12 @@ class ChatViewSet(BaseAPIView, viewsets.ModelViewSet):
     serializer_class = ChatSerializer
     queryset = Chat.objects.all()
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ChatListSerializer
+
+        return ChatSerializer
 
     def get_queryset(self):
         user = self.request.user
