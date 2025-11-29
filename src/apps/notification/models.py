@@ -17,6 +17,6 @@ class Notification(TimestampedModel):
 
 
 class NotificationUser(models.Model):
-    user = models.OneToOneField(to=User, on_delete=models.CASCADE)
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
     notification = models.ForeignKey(to=Notification, on_delete=models.CASCADE)
     is_read = models.BooleanField(default=False)
