@@ -22,7 +22,7 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         query = self.request.query_params.get('query', None)
-        type = self.request.query_params.get('type', None)
+        type = self.request.query_params.get('type', None) # 'lost', 'found'
         user_id = self.request.query_params.get('user_id', None)
         date_start = self.request.query_params.get('date_start', None) # 2025-12-31
         date_end = self.request.query_params.get('date_end', None) # 2025-12-31

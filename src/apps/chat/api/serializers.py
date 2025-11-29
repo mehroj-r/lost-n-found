@@ -34,6 +34,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
 class ChatListSerializer(serializers.ModelSerializer):
     post = PostSerializer(read_only=True)
+    participant = serializers.SerializerMethodField()
     last_message = MessageSerializer(source='get_last_message', read_only=True)
 
     class Meta:
@@ -41,6 +42,7 @@ class ChatListSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
+            'participant',
             'post',
             'last_message',
             'created_at'
@@ -49,6 +51,11 @@ class ChatListSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'created_at': {'read_only': True},
         }
+
+    def get_participant(self, obj):
+        user = self.context['request'].user
+        participant = obj.users.exclude(id=user.id).first()
+        return UserSerializer(participant, context=self.context).data
 
 
 class ChatSerializer(serializers.ModelSerializer):

@@ -37,6 +37,7 @@ class ChatViewSet(BaseAPIView, viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+
     @action(methods=['GET', 'POST'], detail=True, url_path='messages', url_name='chat_messages')
     def messages(self, request, pk=None):
 

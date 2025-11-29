@@ -18,4 +18,8 @@ class ProfileApiView(core_views.RetrieveAPIView, core_views.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
+        user_id = self.request.query_params.get('user_id', None)
+        if user_id:
+            return User.objects.get(id=user_id)
+
         return self.request.user
