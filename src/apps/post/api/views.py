@@ -4,7 +4,6 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.account.api.serializers import UserSerializer
 from apps.chat.api.serializers import ChatSerializer
 from apps.chat.models import Chat
 from apps.core.api.views.base import BaseAPIView

@@ -23,7 +23,20 @@ class ChatViewSet(BaseAPIView, viewsets.ModelViewSet):
         user = self.request.user
         return self.queryset.filter(users=user).distinct()
 
+    def retrieve(self, request, *args, **kwargs):
+        chat = self.get_object()
+        chat_data = self.get_serializer(chat, context={'request': request}).data
+        post_data = chat_data.pop('post', None)
+        users_data = chat_data.pop('users', None)
 
+        return Response(
+            {
+                'chat': chat_data,
+                'users': users_data,
+                'post': post_data
+            },
+            status=status.HTTP_200_OK
+        )
     @action(methods=['GET', 'POST'], detail=True, url_path='messages', url_name='chat_messages')
     def messages(self, request, pk=None):
 
