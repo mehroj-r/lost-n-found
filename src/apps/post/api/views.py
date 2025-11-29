@@ -29,8 +29,8 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
         order_by = self.request.query_params.get('order', None) # 'like_count', 'created_at'
 
         # Convert date strings to datetime objects
-        date_start_obj = datetime.datetime.strptime(date_start, '%Y-%m-%d')
-        date_end_obj = datetime.datetime.strptime(date_end, '%Y-%m-%d')
+        date_start_obj = datetime.datetime.strptime(date_start, '%Y-%m-%d') if date_start else None
+        date_end_obj = datetime.datetime.strptime(date_end, '%Y-%m-%d') if date_end else None
 
         # Base queryset with ordering
         self.queryset = self.queryset.select_related('author').order_by('-like_count', '-created_at')
