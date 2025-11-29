@@ -48,6 +48,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "phone",
             "username",
             "email",
+            "password",
             "first_name",
             "last_name",
             "patronymic",
@@ -65,6 +66,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'gender': {'required': False},
             'fio': {'read_only': True},
             'email': {'required': False},
+            'password': {'write_only': True, 'required': False},
         }
 
     def update(self, instance, validated_data):
@@ -72,6 +74,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'bio': validated_data.get('profile', {}).get('bio', instance.profile.bio),
             'avatar': validated_data.pop('profile', {}).get('avatar', instance.profile.avatar),
         }
+
+        # Hash password if provided
+        password = validated_data.pop('password', None)
+        if password:
+            instance.set_password(password)
 
         # Update user instance
         for key, value in validated_data.items():
