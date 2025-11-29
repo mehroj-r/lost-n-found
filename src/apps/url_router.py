@@ -7,6 +7,7 @@ urlpatterns = [
     path('posts/', include("apps.post.urls", namespace="post")),
     path("auth/", include("apps.core.urls.auth_urls", namespace="auth")),
     path("notifications/", include("apps.notification.urls", namespace="notification")),
+    path("chats/", include("apps.chat.urls", namespace="chat")),
     path("files/", include("apps.file.urls", namespace="files")),
     path("health/", include("apps.core.urls.health_urls", namespace="health")),
 ]

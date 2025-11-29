@@ -4,6 +4,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.account.api.serializers import UserSerializer
 from apps.chat.api.serializers import ChatSerializer
 from apps.chat.models import Chat
 from apps.core.api.views.base import BaseAPIView
@@ -91,7 +92,7 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
             chat.users.set([post.author, request.user])
 
         chat_data = ChatSerializer(chat, context={'request': request}).data
-        users_data = chat_data.pop('users', [])
+        users_data = UserSerializer(chat.users.all(), many=True, context={'request': request}).data
 
         return Response(
             {

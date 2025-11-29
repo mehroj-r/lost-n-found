@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.chat.api.serializers import ChatSerializer, MessageSerializer
@@ -10,6 +11,7 @@ from apps.core.api.views.base import BaseAPIView
 class ChatViewSet(BaseAPIView, viewsets.ModelViewSet):
     serializer_class = ChatSerializer
     queryset = Chat.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
