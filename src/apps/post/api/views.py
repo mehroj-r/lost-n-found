@@ -60,7 +60,7 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
 
-    @action(methods=['GET'], detail=True, url_path='liked', url_name='is_liked')
+    @action(methods=['GET'], detail=False, url_path='liked', url_name='is_liked')
     def liked(self, request, pk=None):
         self.queryset = self.queryset.filter(likes=request.user)
         return super().list(request)
