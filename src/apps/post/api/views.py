@@ -24,9 +24,9 @@ class PostAPIViewSet(BaseAPIView, viewsets.ModelViewSet):
         query = self.request.query_params.get('query', None)
         type = self.request.query_params.get('type', None)
         user_id = self.request.query_params.get('user_id', None)
-        date_start = self.request.query_params.get('date', None) # 2025-12-31
+        date_start = self.request.query_params.get('date_start', None) # 2025-12-31
         date_end = self.request.query_params.get('date_end', None) # 2025-12-31
-        order_by = self.request.query_params.get('order', None) # 'like_count', 'created_at'
+        order_by = self.request.query_params.get('order_by', None) # 'like_count', 'created_at'
 
         # Convert date strings to datetime objects
         date_start_obj = datetime.datetime.strptime(date_start, '%Y-%m-%d') if date_start else None
